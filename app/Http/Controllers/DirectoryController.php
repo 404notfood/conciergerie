@@ -39,7 +39,7 @@ class DirectoryController extends Controller {
     public function import(Request $request, ImportCalendar $import): RedirectResponse {
         $member=$this->access->manager($request);
         $data=$request->validate(['property_id'=>['required',Rule::exists('properties','id')->where('concierge_id',$member->concierge_id)],'source'=>['required',Rule::in(['airbnb','booking','ical'])],'calendar'=>['required','file','max:2048']]);
-        $count=$import->handle($member->concierge_id,(int)$data['property_id'],$data['source'],$request->file('calendar')->get());
+        $count=$import->handle($member->concierge_id,(int)$data['property_id'],$data['source'],$request->file('calendar')->getContent());
         return back()->with('success', $count.' périodes importées / actualisées. Vérifiez leur nature avant de planifier une mission.');
     }
 }

@@ -1,10 +1,171 @@
 import { Form } from '@inertiajs/react';
 import type { ComponentProps, ReactNode } from 'react';
 import { LoaderCircle } from 'lucide-react';
-export function BusinessForm({ action, children, submit='Enregistrer', onSuccess, transform }: {action:string;children:ReactNode;submit?:string;onSuccess?:()=>void;transform?:ComponentProps<typeof Form>['transform']}) {
-    return <Form action={action} method="post" transform={transform} onSuccess={onSuccess} options={{preserveScroll:true}} className="business-form" disableWhileProcessing>{({errors,processing})=><>{children}{Object.keys(errors).length>0?<div className="form-errors" role="alert">{Object.entries(errors).map(([key,message])=><p key={key}>{String(message)}</p>)}</div>:null}<div className="business-form-footer"><button className="brand-button small" type="submit" disabled={processing}>{processing?<LoaderCircle className="animate-spin" size={15}/>:null}{submit}</button></div></>}</Form>;
+export function BusinessForm({
+    action,
+    children,
+    submit = 'Enregistrer',
+    onSuccess,
+    transform,
+}: {
+    action: string;
+    children: ReactNode;
+    submit?: string;
+    onSuccess?: () => void;
+    transform?: ComponentProps<typeof Form>['transform'];
+}) {
+    return (
+        <Form
+            action={action}
+            method="post"
+            transform={transform}
+            onSuccess={onSuccess}
+            options={{ preserveScroll: true }}
+            className="business-form"
+            disableWhileProcessing
+        >
+            {({ errors, processing }) => (
+                <>
+                    {children}
+                    {Object.keys(errors).length > 0 ? (
+                        <div className="form-errors" role="alert">
+                            {Object.entries(errors).map(([key, message]) => (
+                                <p key={key}>{String(message)}</p>
+                            ))}
+                        </div>
+                    ) : null}
+                    <div className="business-form-footer">
+                        <button
+                            className="brand-button small"
+                            type="submit"
+                            disabled={processing}
+                        >
+                            {processing ? (
+                                <LoaderCircle
+                                    className="animate-spin"
+                                    size={15}
+                                />
+                            ) : null}
+                            {submit}
+                        </button>
+                    </div>
+                </>
+            )}
+        </Form>
+    );
 }
-export function Field({ label, name, type='text', required=false, defaultValue, placeholder, min, max }: {label:string;name:string;type?:string;required?:boolean;defaultValue?:string|number;placeholder?:string;min?:number|string;max?:number|string}) { return <label className="form-field">{label}<input name={name} type={type} required={required} defaultValue={defaultValue} placeholder={placeholder} min={min} max={max}/></label>; }
-export function TextArea({ label,name,required=false,defaultValue,placeholder }: {label:string;name:string;required?:boolean;defaultValue?:string;placeholder?:string}) {return <label className="form-field">{label}<textarea name={name} required={required} defaultValue={defaultValue} placeholder={placeholder}/></label>;}
-export function SelectField({ label,name,items,required=false,empty='Choisir…',defaultValue,onChange }: {label:string;name:string;items:{value:string|number;label:string}[];required?:boolean;empty?:string;defaultValue?:string|number;onChange?:(value:string)=>void}) {return <label className="form-field">{label}<select name={name} required={required} defaultValue={defaultValue??''} onChange={event=>onChange?.(event.target.value)}>{empty?<option value="">{empty}</option>:null}{items.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label>;}
-export function operationId(): string { const bytes=new Uint8Array(16); crypto.getRandomValues(bytes);bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20); }
+export function Field({
+    label,
+    name,
+    type = 'text',
+    required = false,
+    defaultValue,
+    placeholder,
+    min,
+    max,
+}: {
+    label: string;
+    name: string;
+    type?: string;
+    required?: boolean;
+    defaultValue?: string | number;
+    placeholder?: string;
+    min?: number | string;
+    max?: number | string;
+}) {
+    return (
+        <label className="form-field">
+            {label}
+            <input
+                name={name}
+                type={type}
+                required={required}
+                defaultValue={defaultValue}
+                placeholder={placeholder}
+                min={min}
+                max={max}
+            />
+        </label>
+    );
+}
+export function TextArea({
+    label,
+    name,
+    required = false,
+    defaultValue,
+    placeholder,
+}: {
+    label: string;
+    name: string;
+    required?: boolean;
+    defaultValue?: string;
+    placeholder?: string;
+}) {
+    return (
+        <label className="form-field">
+            {label}
+            <textarea
+                name={name}
+                required={required}
+                defaultValue={defaultValue}
+                placeholder={placeholder}
+            />
+        </label>
+    );
+}
+export function SelectField({
+    label,
+    name,
+    items,
+    required = false,
+    empty = 'Choisir…',
+    defaultValue,
+    onChange,
+}: {
+    label: string;
+    name: string;
+    items: { value: string | number; label: string }[];
+    required?: boolean;
+    empty?: string;
+    defaultValue?: string | number;
+    onChange?: (value: string) => void;
+}) {
+    return (
+        <label className="form-field">
+            {label}
+            <select
+                name={name}
+                required={required}
+                defaultValue={defaultValue ?? ''}
+                onChange={(event) => onChange?.(event.target.value)}
+            >
+                {empty ? <option value="">{empty}</option> : null}
+                {items.map((item) => (
+                    <option key={item.value} value={item.value}>
+                        {item.label}
+                    </option>
+                ))}
+            </select>
+        </label>
+    );
+}
+export function operationId(): string {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(
+        '',
+    );
+    return (
+        hex.slice(0, 8) +
+        '-' +
+        hex.slice(8, 12) +
+        '-' +
+        hex.slice(12, 16) +
+        '-' +
+        hex.slice(16, 20) +
+        '-' +
+        hex.slice(20)
+    );
+}

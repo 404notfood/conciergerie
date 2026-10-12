@@ -2,23 +2,15 @@
 
 namespace Database\Factories;
 
+use App\Models\Concierge;
 use App\Models\ServiceTemplate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<ServiceTemplate>
- */
+/** @extends Factory<ServiceTemplate> */
 class ServiceTemplateFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        return [
-            //
-        ];
+        return ['concierge_id' => Concierge::factory(), 'name' => 'Entretien', 'checklist' => ['Vérifier les équipements', 'Prendre les preuves photo']];
     }
 }

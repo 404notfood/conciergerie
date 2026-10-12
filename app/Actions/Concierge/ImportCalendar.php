@@ -14,7 +14,7 @@ class ImportCalendar {
         $events=[];
         foreach ($matches[1] as $event) {
             $fields=[];
-            foreach (preg_split('/\r?\n/',$event) as $line) {
+            foreach (preg_split('/\r?\n/',$event) ?: [] as $line) {
                 if (preg_match('/^([A-Z]+)(?:;[^:]*)?:(.*)$/',$line,$m)) { $fields[$m[1]]=trim($m[2]); }
             }
             if (($fields['STATUS']??'')==='CANCELLED') { continue; }

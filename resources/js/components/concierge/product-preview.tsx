@@ -1,12 +1,259 @@
 import { useState } from 'react';
-import { Bell, CalendarDays, Check, ChevronLeft, ChevronRight, ClipboardList, FileText, Home, Settings, TriangleAlert, Users, WifiOff } from 'lucide-react';
+import {
+    Bell,
+    CalendarDays,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    ClipboardList,
+    FileText,
+    Home,
+    Settings,
+    TriangleAlert,
+    Users,
+    WifiOff,
+} from 'lucide-react';
 import { Brand, RoomIllustration } from './brand';
-const menu = [{label:'Vue d’ensemble',icon:Home},{label:'Missions',icon:ClipboardList},{label:'Planning',icon:CalendarDays},{label:'Équipes',icon:Users},{label:'Clients',icon:Users},{label:'Documents',icon:FileText},{label:'Paramètres',icon:Settings}];
+const menu = [
+    { label: 'Vue d’ensemble', icon: Home },
+    { label: 'Missions', icon: ClipboardList },
+    { label: 'Planning', icon: CalendarDays },
+    { label: 'Équipes', icon: Users },
+    { label: 'Clients', icon: Users },
+    { label: 'Documents', icon: FileText },
+    { label: 'Paramètres', icon: Settings },
+];
 export function ProductPreview() {
-    return <div className="product-preview" aria-label="Aperçu illustratif du tableau de bord"><div className="preview-top"><Brand compact/><span className="preview-profile"><Bell size={14}/><b>CB</b> Chloé B.</span></div><div className="preview-body"><aside className="preview-sidebar">{menu.map(({label,icon:Icon},i)=><div key={label} className={i===0?'active':''}><Icon size={14}/>{label}</div>)}<span className="preview-demo">Aperçu illustratif</span></aside><div className="preview-content"><h3>Vue d’ensemble</h3><p>Lundi 12 octobre</p><div className="preview-columns"><div><div className="preview-stats"><div><span><CalendarDays size={17}/></span><p>Missions du jour<strong>8</strong></p></div><div><span><Check size={17}/></span><p>À valider<strong>3</strong></p></div><div className="preview-alert"><span><TriangleAlert size={17}/></span><p>Incidents<strong>1</strong></p></div></div><div className="preview-card preview-missions"><h4>Missions du jour <span>Voir tout →</span></h4>{[{time:'09:00',place:'Villa des Pins',title:'Entretien de résidence',status:'Planifiée',tone:'blue'},{time:'11:30',place:'Les Alizés',title:'Contrôle après intervention',status:'En cours',tone:'green'},{time:'15:00',place:'Résidence du Lac',title:'Visite de surveillance',status:'À valider',tone:'amber'}].map(m=><div className="preview-mission" key={m.time}><p><b>{m.time}</b><small>{m.place}</small></p><p><b>{m.title}</b><small>Suivi et preuves photo</small></p><span className={'status-chip '+m.tone}>{m.status}</span><ChevronRight size={11}/></div>)}</div></div><div className="preview-right"><div className="preview-card preview-calendar"><h4>Octobre 2026 <ChevronLeft size={12}/><ChevronRight size={12}/></h4><div className="calendar-grid">{['L','Ma','Me','J','V','S','D'].map((d,i)=><small key={i}>{d}</small>)}{Array.from({length:35},(_,i)=><span key={i} className={i-2===12?'selected':''}>{i<3||i>33?'':i-2}</span>)}</div></div><div className="preview-card preview-report"><h4>Dernier compte rendu</h4><b>Entretien de résidence</b><p>Villa des Pins · Aujourd’hui</p><div className="preview-photos"><div><RoomIllustration/><span>Avant</span></div><div><RoomIllustration after/><span>Après</span></div></div><div className="preview-validated"><Check size={10}/> Validé et partagé</div></div></div></div></div></div></div>;
+    return (
+        <div
+            className="product-preview"
+            aria-label="Aperçu illustratif du tableau de bord"
+        >
+            <div className="preview-top">
+                <Brand compact />
+                <span className="preview-profile">
+                    <Bell size={14} />
+                    <b>CB</b> Chloé B.
+                </span>
+            </div>
+            <div className="preview-body">
+                <aside className="preview-sidebar">
+                    {menu.map(({ label, icon: Icon }, i) => (
+                        <div key={label} className={i === 0 ? 'active' : ''}>
+                            <Icon size={14} />
+                            {label}
+                        </div>
+                    ))}
+                    <span className="preview-demo">Aperçu illustratif</span>
+                </aside>
+                <div className="preview-content">
+                    <h3>Vue d’ensemble</h3>
+                    <p>Lundi 12 octobre</p>
+                    <div className="preview-columns">
+                        <div>
+                            <div className="preview-stats">
+                                <div>
+                                    <span>
+                                        <CalendarDays size={17} />
+                                    </span>
+                                    <p>
+                                        Missions du jour<strong>8</strong>
+                                    </p>
+                                </div>
+                                <div>
+                                    <span>
+                                        <Check size={17} />
+                                    </span>
+                                    <p>
+                                        À valider<strong>3</strong>
+                                    </p>
+                                </div>
+                                <div className="preview-alert">
+                                    <span>
+                                        <TriangleAlert size={17} />
+                                    </span>
+                                    <p>
+                                        Incidents<strong>1</strong>
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="preview-card preview-missions">
+                                <h4>
+                                    Missions du jour <span>Voir tout →</span>
+                                </h4>
+                                {[
+                                    {
+                                        time: '09:00',
+                                        place: 'Villa des Pins',
+                                        title: 'Entretien de résidence',
+                                        status: 'Planifiée',
+                                        tone: 'blue',
+                                    },
+                                    {
+                                        time: '11:30',
+                                        place: 'Les Alizés',
+                                        title: 'Contrôle après intervention',
+                                        status: 'En cours',
+                                        tone: 'green',
+                                    },
+                                    {
+                                        time: '15:00',
+                                        place: 'Résidence du Lac',
+                                        title: 'Visite de surveillance',
+                                        status: 'À valider',
+                                        tone: 'amber',
+                                    },
+                                ].map((m) => (
+                                    <div
+                                        className="preview-mission"
+                                        key={m.time}
+                                    >
+                                        <p>
+                                            <b>{m.time}</b>
+                                            <small>{m.place}</small>
+                                        </p>
+                                        <p>
+                                            <b>{m.title}</b>
+                                            <small>
+                                                Suivi et preuves photo
+                                            </small>
+                                        </p>
+                                        <span
+                                            className={'status-chip ' + m.tone}
+                                        >
+                                            {m.status}
+                                        </span>
+                                        <ChevronRight size={11} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="preview-right">
+                            <div className="preview-card preview-calendar">
+                                <h4>
+                                    Octobre 2026 <ChevronLeft size={12} />
+                                    <ChevronRight size={12} />
+                                </h4>
+                                <div className="calendar-grid">
+                                    {['L', 'Ma', 'Me', 'J', 'V', 'S', 'D'].map(
+                                        (d, i) => (
+                                            <small key={i}>{d}</small>
+                                        ),
+                                    )}
+                                    {Array.from({ length: 35 }, (_, i) => (
+                                        <span
+                                            key={i}
+                                            className={
+                                                i - 2 === 12 ? 'selected' : ''
+                                            }
+                                        >
+                                            {i < 3 || i > 33 ? '' : i - 2}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="preview-card preview-report">
+                                <h4>Dernier compte rendu</h4>
+                                <b>Entretien de résidence</b>
+                                <p>Villa des Pins · Aujourd’hui</p>
+                                <div className="preview-photos">
+                                    <div>
+                                        <RoomIllustration />
+                                        <span>Avant</span>
+                                    </div>
+                                    <div>
+                                        <RoomIllustration after />
+                                        <span>Après</span>
+                                    </div>
+                                </div>
+                                <div className="preview-validated">
+                                    <Check size={10} /> Validé et partagé
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
 export function PhonePreview() {
-    const [tab,setTab]=useState('À faire');
-    const [checked,setChecked]=useState([true,true,true,false]);
-    return <div className="phone-frame"><div className="phone-notch"/><div className="phone-screen"><div className="phone-status">9:41 <span>▮▮▮  ▰</span></div><div className="phone-title"><ClipboardList size={18}/><b>Mes missions</b><span><WifiOff size={10}/> Hors connexion</span></div><div className="phone-tabs">{['À faire','En cours','Terminées'].map(t=><button key={t} className={tab===t?'active':''} onClick={()=>setTab(t)}>{t}</button>)}</div>{tab==='Terminées'?<div className="phone-empty"><Check size={28}/><b>Votre travail reste avec vous.</b><p>Les brouillons préparés sont conservés sur l’appareil.</p></div>:<div className="phone-mission"><b>10:00 · Visite de résidence</b><p>Résidence du Lac · Annecy</p>{['Vérifier l’état général','Contrôler les équipements','Prendre des photos','Ajouter une observation'].map((label,i)=><button className="phone-check" key={label} aria-pressed={checked[i]} onClick={()=>setChecked(values=>values.map((v,j)=>j===i?!v:v))}><span className={checked[i]?'checked':''}>{checked[i]?<Check size={11}/>:null}</span>{label}</button>)}<div className="phone-photos"><RoomIllustration after/><RoomIllustration/><RoomIllustration after/></div><div className="phone-pending">Sur cet appareil <ChevronRight size={13}/></div></div>}<p className="phone-caption">Exemple du parcours terrain</p></div></div>;
+    const [tab, setTab] = useState('À faire');
+    const [checked, setChecked] = useState([true, true, true, false]);
+    return (
+        <div className="phone-frame">
+            <div className="phone-notch" />
+            <div className="phone-screen">
+                <div className="phone-status">
+                    9:41 <span>▮▮▮ ▰</span>
+                </div>
+                <div className="phone-title">
+                    <ClipboardList size={18} />
+                    <b>Mes missions</b>
+                    <span>
+                        <WifiOff size={10} /> Hors connexion
+                    </span>
+                </div>
+                <div className="phone-tabs">
+                    {['À faire', 'En cours', 'Terminées'].map((t) => (
+                        <button
+                            key={t}
+                            className={tab === t ? 'active' : ''}
+                            onClick={() => setTab(t)}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
+                {tab === 'Terminées' ? (
+                    <div className="phone-empty">
+                        <Check size={28} />
+                        <b>Votre travail reste avec vous.</b>
+                        <p>
+                            Les brouillons préparés sont conservés sur
+                            l’appareil.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="phone-mission">
+                        <b>10:00 · Visite de résidence</b>
+                        <p>Résidence du Lac · Annecy</p>
+                        {[
+                            'Vérifier l’état général',
+                            'Contrôler les équipements',
+                            'Prendre des photos',
+                            'Ajouter une observation',
+                        ].map((label, i) => (
+                            <button
+                                className="phone-check"
+                                key={label}
+                                aria-pressed={checked[i]}
+                                onClick={() =>
+                                    setChecked((values) =>
+                                        values.map((v, j) =>
+                                            j === i ? !v : v,
+                                        ),
+                                    )
+                                }
+                            >
+                                <span className={checked[i] ? 'checked' : ''}>
+                                    {checked[i] ? <Check size={11} /> : null}
+                                </span>
+                                {label}
+                            </button>
+                        ))}
+                        <div className="phone-photos">
+                            <RoomIllustration after />
+                            <RoomIllustration />
+                            <RoomIllustration after />
+                        </div>
+                        <div className="phone-pending">
+                            Sur cet appareil <ChevronRight size={13} />
+                        </div>
+                    </div>
+                )}
+                <p className="phone-caption">Exemple du parcours terrain</p>
+            </div>
+        </div>
+    );
 }

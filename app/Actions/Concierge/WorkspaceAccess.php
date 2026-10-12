@@ -13,8 +13,13 @@ class WorkspaceAccess {
     public function manager(Request $request): Membership {
         $member = $this->membership($request); abort_unless($member->role === 'manager', 403); return $member;
     }
+    /**
+     * @template TModel of Model
+     * @param class-string<TModel> $model
+     * @return TModel
+     */
     public function record(Request $request, string $model, int $id): Model {
-        return $model::where('concierge_id', $this->membership($request)->concierge_id)->findOrFail($id);
+        return (new $model)->newQuery()->where('concierge_id', $this->membership($request)->concierge_id)->whereKey($id)->firstOrFail();
     }
     public function mission(Request $request, int $id): Mission {
         $member = $this->membership($request);

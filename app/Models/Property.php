@@ -7,6 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $concierge_id
+ * @property int $client_id
+ * @property string $name
+ * @property string $address
+ * @property string $kind
+ * @property string|null $instructions
+ * @property string|null $access_code
+ * @property bool $offline_access
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property Client $client
+ */
 #[Fillable(['concierge_id', 'client_id', 'name', 'address', 'kind', 'instructions', 'access_code', 'offline_access'])]
 #[Hidden(['access_code'])]
 class Property extends Model
@@ -14,5 +28,6 @@ class Property extends Model
     /** @use HasFactory<\Database\Factories\PropertyFactory> */
     use HasFactory;
     protected function casts(): array { return ['access_code' => 'encrypted', 'offline_access' => 'boolean']; }
+    /** @return BelongsTo<Client, $this> */
     public function client(): BelongsTo { return $this->belongsTo(Client::class, 'client_id'); }
 }

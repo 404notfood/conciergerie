@@ -3,22 +3,14 @@
 namespace Database\Factories;
 
 use App\Models\Photo;
+use App\Models\Report;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<Photo>
- */
+/** @extends Factory<Photo> */
 class PhotoFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        return [
-            //
-        ];
+        return ['report_id' => Report::factory(), 'concierge_id' => fn (array $attributes) => Report::whereKey($attributes['report_id'])->firstOrFail()->concierge_id, 'author_id' => fn (array $attributes) => Report::whereKey($attributes['report_id'])->firstOrFail()->author_id, 'path' => 'proofs/example.jpg', 'stage' => 'observation'];
     }
 }

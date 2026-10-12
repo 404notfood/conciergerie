@@ -26,7 +26,7 @@ class ClientPortalController extends Controller {
             $record=InterventionRequest::where('concierge_id',$member->concierge_id)->lockForUpdate()->findOrFail($interventionRequest); abort_unless($record->status==='pending',409);
             $missionId=null;
             if ($data['decision']==='accepted') {
-                $template=ServiceTemplate::findOrFail($data['template_id']);
+                $template=ServiceTemplate::whereKey($data['template_id'])->firstOrFail();
                 $mission=Mission::create(['concierge_id'=>$member->concierge_id,'property_id'=>$record->property_id,'assigned_user_id'=>$data['assigned_user_id']??null,'title'=>$record->title,'scheduled_at'=>$data['scheduled_at'],'instructions'=>$record->description,'checklist'=>$template->checklist]); $missionId=$mission->id;
             }
             $record->update(['status'=>$data['decision'],'decision'=>$data['feedback'],'mission_id'=>$missionId]); $this->access->log($request,'Demande client '.($missionId?'validée':'refusée').' : '.$record->title,$missionId);

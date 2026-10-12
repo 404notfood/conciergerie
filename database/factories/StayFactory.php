@@ -2,23 +2,15 @@
 
 namespace Database\Factories;
 
+use App\Models\Property;
 use App\Models\Stay;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends Factory<Stay>
- */
+/** @extends Factory<Stay> */
 class StayFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        return [
-            //
-        ];
+        return ['property_id' => Property::factory(), 'concierge_id' => fn (array $attributes) => Property::whereKey($attributes['property_id'])->firstOrFail()->concierge_id, 'title' => 'Séjour', 'starts_on' => '2026-10-12', 'ends_on' => '2026-10-16', 'source' => 'manual', 'kind' => 'stay'];
     }
 }

@@ -3,22 +3,16 @@
 namespace Database\Factories;
 
 use App\Models\Incident;
+use App\Models\Mission;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
-/**
- * @extends Factory<Incident>
- */
+/** @extends Factory<Incident> */
 class IncidentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
-        return [
-            //
-        ];
+        return ['mission_id' => Mission::factory(), 'concierge_id' => fn (array $attributes) => Mission::whereKey($attributes['mission_id'])->firstOrFail()->concierge_id, 'author_id' => User::factory(), 'operation_id' => (string) Str::uuid(), 'description' => 'Équipement endommagé.'];
     }
 }
