@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Concierge\SubscriptionManager;
+use App\Actions\Concierge\NotifyActivity;
+use App\Models\MissionRecurrence;
+use App\Models\RecurrenceOccurrence;
+use App\Models\StaffAvailability;
 use App\Actions\Concierge\WorkspaceAccess;
 use App\Models\Activity;
 use App\Models\Client;
@@ -60,6 +64,9 @@ class WorkspaceController extends Controller
             $requests->whereHas('property', fn ($q) => $q->where('client_id', $member->client_id));
             $messages->where('client_id', $member->client_id);
         }
+        if ($member->role === 'manager') {
+            $incidents->with(['responsible:id,name', 'repairMission:id,title,status', 'events.user:id,name']);
+        }
         $missionData = $missions->orderBy('scheduled_at')->orderBy('id')->get();
         if ($member->role === 'client') {
             $missionData->each(function (Mission $mission) {
@@ -78,14 +85,27 @@ class WorkspaceController extends Controller
         $incidentData = $incidents->latest('id')->get();
         if ($member->role === 'client') {
             $incidentData = $incidentData->map(fn (Incident $incident) => [
-                'id' => $incident->id, 'mission_id' => $incident->mission_id, 'description' => $incident->client_message, 'status' => $incident->status,
+                'id' => $incident->id, 'mission_id' => $incident->mission_id, 'description' => $incident->client_message, 'status' => $incident->shared_status ?? $incident->status,
                 'client_message' => $incident->client_message, 'shared_at' => $incident->shared_at, 'shared_photo_ids' => $incident->shared_photo_ids, 'created_at' => $incident->created_at,
                 'author' => ['name' => User::whereKey($incident->shared_by)->value('name') ?? 'Votre conciergerie'],
                 'mission' => ['id' => $incident->mission_id, 'title' => $incident->mission->title, 'property' => ['name' => $incident->mission->property->name, 'address' => $incident->mission->property->address]],
             ]);
         }
 
+        if ($member->role !== 'manager' && $member->role !== 'client') {
+            $incidentData->each(fn (Incident $incident) => $incident->makeHidden(['resolution_notes', 'resolution_photo_ids', 'resolved_by', 'responsible_user_id']));
+        }
+        $availability = StaffAvailability::where('concierge_id', $tenant)->with('user:id,name');
+        if ($member->role === 'worker') {
+            $availability->where('user_id', $request->user()->id);
+        } elseif ($member->role === 'coordinator') {
+            $availability->whereIn('user_id', Membership::where('concierge_id', $tenant)->where('company', $member->company)->where('role', 'worker')->select('user_id'));
+        }
         return Inertia::render('workspace/index', [
+            'notificationInbox' => fn () => app(NotifyActivity::class)->inbox($tenant, $request->user()->id),
+            'recurrences' => $member->role === 'manager' ? MissionRecurrence::where('concierge_id', $tenant)->with('property:id,name')->latest('id')->get() : [],
+            'occurrences' => $member->role === 'manager' ? RecurrenceOccurrence::where('concierge_id', $tenant)->where('status', 'pending')->with('recurrence:id,title,is_active')->orderBy('scheduled_on')->limit(200)->get() : [],
+            'availabilities' => $member->role !== 'client' ? $availability->orderBy('starts_at')->get() : [],
             'concierge' => Concierge::findOrFail($tenant),
             'subscriptionSummary' => $member->role === 'manager' ? ['subscription' => $this->subscriptions->ensure($tenant), 'limits' => $this->subscriptions->limits($this->subscriptions->ensure($tenant)), 'usage' => $this->subscriptions->usage($tenant), 'monthly_price_cents' => $this->subscriptions->price($this->subscriptions->ensure($tenant))] : null, 'membership' => $member,
             'workspaces' => Membership::where('user_id', $request->user()->id)->with('concierge')->get(),

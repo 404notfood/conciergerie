@@ -47,6 +47,7 @@ class SubmitReport
                     Photo::create(['concierge_id' => $member->concierge_id, 'report_id' => $report->id, 'author_id' => $request->user()->id, 'path' => $path, 'size_bytes' => $file->getSize(), 'stage' => $data['stages'][$index] ?? 'observation', 'captured_at' => $data['captured_at'][$index] ?? null]);
                 }
                 $mission->update(['status' => 'submitted', 'version' => $mission->version + 1]);
+                app(NotifyActivity::class)->send($member->concierge_id, app(NotifyActivity::class)->managers($member->concierge_id), 'report_submitted', 'report:'.$report->id, 'Un compte rendu attend votre contrôle.', 'reports', $request->user()->id);
                 $this->access->log($request, 'Compte rendu soumis : '.$mission->title, $mission->id);
 
                 return $report;
