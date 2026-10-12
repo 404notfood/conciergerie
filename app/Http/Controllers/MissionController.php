@@ -12,6 +12,7 @@ use App\Models\ServiceTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -25,6 +26,7 @@ class MissionController extends Controller
     {
         $member = $this->access->manager($request);
         $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)], 'assigned_user_id' => ['nullable', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)], 'title' => ['required', 'string', 'max:120'], 'kind' => ['required', Rule::in(['service', 'initial', 'arrival', 'departure'])], 'scheduled_at' => ['required', 'date'], 'duration' => ['required', 'integer', 'min:5', 'max:1440'], 'instructions' => ['nullable', 'string', 'max:5000']]);
+        $data['scheduled_at'] = Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc();
         $template = ServiceTemplate::whereKey($data['template_id'])->firstOrFail();
         unset($data['template_id']);
         DB::transaction(function () use ($request, $data, $member, $template) {

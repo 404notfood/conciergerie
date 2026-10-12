@@ -15,6 +15,8 @@ use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
+ * @property bool $is_admin
+ * @property Carbon|null $disabled_at
  * @property int $id
  * @property string $name
  * @property string $email
@@ -43,6 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_admin' => 'boolean',
+            'disabled_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];

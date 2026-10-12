@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers;
+use Illuminate\Support\Carbon;
 use App\Actions\Concierge\WorkspaceAccess;
 use App\Models\{InterventionRequest, Message, Mission, ServiceTemplate};
 use Illuminate\Http\{Request, RedirectResponse};
@@ -27,7 +28,7 @@ class ClientPortalController extends Controller {
             $missionId=null;
             if ($data['decision']==='accepted') {
                 $template=ServiceTemplate::whereKey($data['template_id'])->firstOrFail();
-                $mission=Mission::create(['concierge_id'=>$member->concierge_id,'property_id'=>$record->property_id,'assigned_user_id'=>$data['assigned_user_id']??null,'title'=>$record->title,'scheduled_at'=>$data['scheduled_at'],'instructions'=>$record->description,'checklist'=>$template->checklist]); $missionId=$mission->id;
+                $mission=Mission::create(['concierge_id'=>$member->concierge_id,'property_id'=>$record->property_id,'assigned_user_id'=>$data['assigned_user_id']??null,'title'=>$record->title,'scheduled_at'=>Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc(),'instructions'=>$record->description,'checklist'=>$template->checklist]); $missionId=$mission->id;
             }
             $record->update(['status'=>$data['decision'],'decision'=>$data['feedback'],'mission_id'=>$missionId]); $this->access->log($request,'Demande client '.($missionId?'validée':'refusée').' : '.$record->title,$missionId);
         }); return back()->with('success','Décision enregistrée.');
