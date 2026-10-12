@@ -2,20 +2,23 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Carbon;
 use App\Actions\Concierge\WorkspaceAccess;
+use App\Actions\Concierge\QuotaGate;
 use App\Models\{InterventionRequest, Message, Mission, ServiceTemplate};
 use Illuminate\Http\{Request, RedirectResponse};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 class ClientPortalController extends Controller {
-    public function __construct(private WorkspaceAccess $access) {}
+    public function __construct(private WorkspaceAccess $access, private QuotaGate $quotas) {}
     public function message(Request $request): RedirectResponse {
         $member=$this->access->membership($request); abort_unless(in_array($member->role,['manager','client'],true),403);
+        $this->quotas->feature($request,'messaging');
         $data=$request->validate(['client_id'=>['required',Rule::exists('clients','id')->where('concierge_id',$member->concierge_id)],'body'=>['required','string','max:5000']]);
         if ($member->role==='client') { abort_unless((int)$data['client_id']===$member->client_id,404); }
         Message::create([...$data,'concierge_id'=>$member->concierge_id,'author_id'=>$request->user()->id]); return back()->with('success','Message envoyé.');
     }
     public function request(Request $request): RedirectResponse {
         $member=$this->access->membership($request); abort_unless($member->role==='client',403);
+        $this->quotas->feature($request,'client_portal');
         $data=$request->validate(['property_id'=>['required',Rule::exists('properties','id')->where('concierge_id',$member->concierge_id)->where('client_id',$member->client_id)],'title'=>['required','string','max:120'],'description'=>['required','string','max:5000']]);
         DB::transaction(function () use ($request,$member,$data) { InterventionRequest::create([...$data,'concierge_id'=>$member->concierge_id,'author_id'=>$request->user()->id]); $this->access->log($request,'Demande client reçue : '.$data['title']); });
         return back()->with('success','Demande reçue. Votre conciergerie doit la valider avant toute intervention.');
@@ -28,7 +31,7 @@ class ClientPortalController extends Controller {
             $missionId=null;
             if ($data['decision']==='accepted') {
                 $template=ServiceTemplate::whereKey($data['template_id'])->firstOrFail();
-                $mission=Mission::create(['concierge_id'=>$member->concierge_id,'property_id'=>$record->property_id,'assigned_user_id'=>$data['assigned_user_id']??null,'title'=>$record->title,'scheduled_at'=>Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc(),'instructions'=>$record->description,'checklist'=>$template->checklist]); $missionId=$mission->id;
+                $mission=$this->quotas->mutate($request,['missions_month'=>1],fn()=>Mission::create(['concierge_id'=>$member->concierge_id,'property_id'=>$record->property_id,'assigned_user_id'=>$data['assigned_user_id']??null,'title'=>$record->title,'scheduled_at'=>Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc(),'instructions'=>$record->description,'checklist'=>$template->checklist])); $missionId=$mission->id;
             }
             $record->update(['status'=>$data['decision'],'decision'=>$data['feedback'],'mission_id'=>$missionId]); $this->access->log($request,'Demande client '.($missionId?'validée':'refusée').' : '.$record->title,$missionId);
         }); return back()->with('success','Décision enregistrée.');

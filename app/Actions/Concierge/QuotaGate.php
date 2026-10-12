@@ -25,6 +25,13 @@ class QuotaGate {
             return $callback();
         });
     }
+    public function team(Request $request, ?string $team, string $role): void {
+        if($role==='client'||$request->user()->is_admin){return;}
+        $tenant=$this->access->membership($request)->concierge_id;$name=$team?:'Équipe principale';
+        $exists=\App\Models\Membership::where('concierge_id',$tenant)->where('role','!=','client')->get()->contains(fn($member)=>($member->team?:'Équipe principale')===$name);
+        $limit=$this->subscriptions->limits($this->subscriptions->ensure($tenant))['teams']??null;
+        if(!$exists&&$limit!==null&&$this->subscriptions->usage($tenant)['teams']>=$limit){throw ValidationException::withMessages(['team'=>'La limite d’agences / équipes de votre abonnement est atteinte.']);}
+    }
     public function storage(Request $request, int $incomingBytes): void {
         if ($request->user()->is_admin) {return;}
         $tenant=$this->access->membership($request)->concierge_id; $subscription=$this->subscriptions->ensure($tenant);$limit=$this->subscriptions->limits($subscription)['storage_mb']??null;

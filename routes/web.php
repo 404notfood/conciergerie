@@ -1,8 +1,11 @@
 <?php
 use App\Http\Controllers\{ClientPortalController, DirectoryController, MissionController, TerrainController, WorkspaceController};
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdministrationController;
+use App\Http\Middleware\EnsureAppAdmin;
+use App\Http\Middleware\EnsureSubscription;
 Route::inertia('/', 'welcome')->name('home');
-Route::middleware(['auth','verified'])->group(function () {
+Route::middleware(['auth','verified',EnsureSubscription::class])->group(function () {
     Route::get('/dashboard',[WorkspaceController::class,'index'])->name('dashboard');
     Route::post('/workspace',[WorkspaceController::class,'store'])->name('workspace.store');
     Route::post('/workspace/switch',[WorkspaceController::class,'switch'])->name('workspace.switch');
@@ -23,5 +26,18 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::post('/requests',[ClientPortalController::class,'request'])->name('requests.store');
     Route::post('/requests/{interventionRequest}/decision',[ClientPortalController::class,'decide'])->name('requests.decide');
     Route::get('/terrain-data',[TerrainController::class,'data'])->name('terrain.data');
+});
+Route::middleware(['auth','verified'])->get('/abonnement',[WorkspaceController::class,'subscription'])->name('subscription.show');
+Route::middleware(['auth','verified',EnsureAppAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/',[AdministrationController::class,'index'])->name('index');
+    Route::post('/plans',[AdministrationController::class,'storePlan'])->name('plans.store');
+    Route::post('/plans/{plan}',[AdministrationController::class,'updatePlan'])->name('plans.update');
+    Route::post('/addons',[AdministrationController::class,'storeAddon'])->name('addons.store');
+    Route::post('/addons/{addon}',[AdministrationController::class,'updateAddon'])->name('addons.update');
+    Route::post('/concierges/{concierge}/subscription',[AdministrationController::class,'subscription'])->name('subscriptions.update');
+    Route::post('/concierges/{concierge}/visit',[AdministrationController::class,'visit'])->name('concierges.visit');
+    Route::post('/leave',[AdministrationController::class,'leave'])->name('leave');
+    Route::post('/settings',[AdministrationController::class,'settings'])->name('settings.update');
+    Route::post('/users/{user}',[AdministrationController::class,'user'])->name('users.update');
 });
 require __DIR__.'/settings.php';

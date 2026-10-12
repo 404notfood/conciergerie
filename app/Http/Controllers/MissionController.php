@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Concierge\SubmitReport;
+use App\Actions\Concierge\QuotaGate;
 use App\Actions\Concierge\WorkspaceAccess;
 use App\Models\Incident;
 use App\Models\Mission;
@@ -20,7 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MissionController extends Controller
 {
-    public function __construct(private WorkspaceAccess $access) {}
+    public function __construct(private WorkspaceAccess $access, private QuotaGate $quotas) {}
 
     public function store(Request $request): RedirectResponse
     {
@@ -29,7 +30,7 @@ class MissionController extends Controller
         $data['scheduled_at'] = Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc();
         $template = ServiceTemplate::whereKey($data['template_id'])->firstOrFail();
         unset($data['template_id']);
-        DB::transaction(function () use ($request, $data, $member, $template) {
+        $this->quotas->mutate($request,['missions_month'=>1],function () use ($request, $data, $member, $template) {
             $mission = Mission::create([...$data, 'concierge_id' => $member->concierge_id, 'checklist' => $template->checklist]);
             $this->access->log($request, 'Mission planifiée : '.$mission->title, $mission->id);
         });

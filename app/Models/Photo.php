@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $concierge_id
  * @property int $report_id
  * @property int $author_id
+ * @property int $size_bytes
  * @property string $path
  * @property string $stage
  * @property \Illuminate\Support\Carbon|null $captured_at
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon $updated_at
  * @property Report $report
  */
-#[Fillable(['concierge_id', 'report_id', 'author_id', 'path', 'stage', 'captured_at'])]
+#[Fillable(['concierge_id', 'report_id', 'author_id', 'path', 'size_bytes', 'stage', 'captured_at'])]
 #[Hidden(['path'])]
 class Photo extends Model
 {

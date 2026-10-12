@@ -5,6 +5,10 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 class WorkspaceAccess {
     public function membership(Request $request): Membership {
+        if($request->user()->is_admin && $request->session()->has('admin_concierge_id')) {
+            $concierge=\App\Models\Concierge::findOrFail($request->session()->get('admin_concierge_id'));
+            return new Membership(['concierge_id'=>$concierge->id,'user_id'=>$request->user()->id,'role'=>'manager']);
+        }
         $query = Membership::where('user_id', $request->user()->id);
         $selected = $request->session()->get('concierge_id');
         $member = $selected ? (clone $query)->where('concierge_id', $selected)->first() : null;

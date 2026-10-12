@@ -1,12 +1,13 @@
 <?php
 namespace App\Http\Controllers;
 use App\Actions\Concierge\WorkspaceAccess;
+use App\Actions\Concierge\QuotaGate;
 use App\Models\{Concierge, Mission};
 use Illuminate\Http\{Request, JsonResponse};
 class TerrainController extends Controller {
-    public function __construct(private WorkspaceAccess $access) {}
+    public function __construct(private WorkspaceAccess $access, private QuotaGate $quotas) {}
     public function data(Request $request): JsonResponse {
-        $member=$this->access->membership($request); abort_if($member->role==='client',403);
+        $member=$this->access->membership($request); abort_unless(in_array($member->role,['manager','worker'],true),403);$this->quotas->feature($request,'offline');
         $missions=Mission::where('concierge_id',$member->concierge_id)->where('assigned_user_id',$request->user()->id)->whereIn('status',['accepted','in_progress','changes_requested'])->with(['property','reports'])->orderBy('scheduled_at')->get();
         return response()->json([
             'identity'=>$member->concierge_id.':'.$request->user()->id, 'user'=>['id'=>$request->user()->id,'name'=>$request->user()->name], 'concierge'=>Concierge::findOrFail($member->concierge_id)->name,'csrf'=>csrf_token(),
