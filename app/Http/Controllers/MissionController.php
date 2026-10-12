@@ -1,0 +1,82 @@
+<?php
+namespace App\Http\Controllers;
+use App\Actions\Concierge\{WorkspaceAccess, SubmitReport};
+use App\Models\{Incident, Membership, Mission, Photo, Report, ServiceTemplate};
+use Illuminate\Http\{Request, RedirectResponse, JsonResponse};
+use Illuminate\Support\Facades\{DB, Storage};
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+class MissionController extends Controller {
+    public function __construct(private WorkspaceAccess $access) {}
+    public function store(Request $request): RedirectResponse {
+        $member=$this->access->manager($request);
+        $data=$request->validate(['property_id'=>['required',Rule::exists('properties','id')->where('concierge_id',$member->concierge_id)],'assigned_user_id'=>['nullable',Rule::exists('memberships','user_id')->where('concierge_id',$member->concierge_id)->whereIn('role',['manager','worker'])],'template_id'=>['required',Rule::exists('service_templates','id')->where('concierge_id',$member->concierge_id)],'title'=>['required','string','max:120'],'kind'=>['required',Rule::in(['service','initial','arrival','departure'])],'scheduled_at'=>['required','date'],'duration'=>['required','integer','min:5','max:1440'],'instructions'=>['nullable','string','max:5000']]);
+        $template=ServiceTemplate::findOrFail($data['template_id']); unset($data['template_id']);
+        DB::transaction(function () use ($request,$data,$member,$template) { $mission=Mission::create([...$data,'concierge_id'=>$member->concierge_id,'checklist'=>$template->checklist]); $this->access->log($request,'Mission planifiée : '.$mission->title,$mission->id); });
+        return back()->with('success','Mission planifiée.');
+    }
+    public function transition(Request $request, int $mission): RedirectResponse {
+        $member=$this->access->membership($request); abort_if($member->role==='client',403);
+        $data=$request->validate(['action'=>['required',Rule::in(['accept','start','cancel','reassign'])],'version'=>['required','integer'],'assigned_user_id'=>['nullable','required_if:action,reassign',Rule::exists('memberships','user_id')->where('concierge_id',$member->concierge_id)->whereIn('role',['manager','worker'])]]);
+        DB::transaction(function () use ($request,$mission,$member,$data) {
+            $record=Mission::where('concierge_id',$member->concierge_id)->lockForUpdate()->findOrFail($mission);
+            abort_unless($member->role==='manager' || $record->assigned_user_id===$request->user()->id,404);
+            abort_unless($record->version===(int)$data['version'],409,'La mission a changé. Actualisez la page.');
+            $action=$data['action'];
+            if (in_array($action,['cancel','reassign'],true)) { abort_unless($member->role==='manager',403); abort_if(in_array($record->status,['validated','cancelled','submitted'],true),409); }
+            if ($action==='accept') { abort_unless($record->status==='planned',409); abort_unless($record->assigned_user_id===$request->user()->id,403); }
+            if ($action==='start') { abort_unless($record->status==='accepted',409); }
+            $status=['accept'=>'accepted','start'=>'in_progress','cancel'=>'cancelled','reassign'=>'planned'][$action];
+            $record->update(['status'=>$status,'version'=>$record->version+1,...($action==='reassign'?['assigned_user_id'=>$data['assigned_user_id']]:[])]);
+            $this->access->log($request,['accept'=>'Mission acceptée','start'=>'Mission commencée','cancel'=>'Mission annulée','reassign'=>'Mission réaffectée'][$action].' : '.$record->title,$record->id);
+        }); return back()->with('success','Mission mise à jour.');
+    }
+    public function report(Request $request, int $mission, SubmitReport $submit): RedirectResponse|JsonResponse {
+        $report=$submit->handle($request,$mission);
+        return $request->expectsJson()?response()->json(['received'=>true,'report_id'=>$report->id]):back()->with('success','Compte rendu reçu. Il attend la validation du responsable.');
+    }
+    public function review(Request $request, int $report): RedirectResponse {
+        $this->access->manager($request);
+        $data=$request->validate(['decision'=>['required',Rule::in(['validated','changes_requested'])],'feedback'=>['nullable','required_if:decision,changes_requested','string','max:3000']]);
+        DB::transaction(function () use ($request,$report,$data) {
+            $record=$this->access->record($request,Report::class,$report);
+            $mission=Mission::whereKey($record->mission_id)->lockForUpdate()->firstOrFail(); $record->refresh();
+            abort_unless($record->status==='submitted' && $mission->status==='submitted' && $mission->reports()->latest('id')->first()->id===$record->id,409);
+            $record->update(['status'=>$data['decision'],'feedback'=>$data['feedback']??null,'reviewer_id'=>$request->user()->id,'reviewed_at'=>now()]);
+            $mission->update(['status'=>$data['decision'],'version'=>$mission->version+1]);
+            $this->access->log($request,($data['decision']==='validated'?'Compte rendu validé et publié':'Reprise demandée').' : '.$mission->title,$mission->id);
+        }); return back()->with('success','Décision enregistrée.');
+    }
+    public function incident(Request $request, int $mission): RedirectResponse|JsonResponse {
+        $member=$this->access->membership($request); abort_if($member->role==='client',403);
+        $data=$request->validate(['operation_id'=>['required','uuid'],'description'=>['required','string','max:5000'],'version'=>['required','integer']]);
+        $incident=DB::transaction(function () use ($request,$mission,$member,$data) {
+            $record=$this->access->mission($request,$mission); $record=Mission::whereKey($record->id)->lockForUpdate()->firstOrFail();
+            $existing=Incident::where('concierge_id',$member->concierge_id)->where('author_id',$request->user()->id)->where('operation_id',$data['operation_id'])->first();
+            if ($existing) { abort_unless($existing->mission_id===$record->id,409); return $existing; }
+            abort_unless($record->version===(int)$data['version'] && in_array($record->status,['accepted','in_progress','changes_requested'],true),409);
+            $incident=Incident::create(['concierge_id'=>$member->concierge_id,'mission_id'=>$record->id,'author_id'=>$request->user()->id,'description'=>$data['description'],'operation_id'=>$data['operation_id']]);
+            $this->access->log($request,'Incident signalé : '.$record->title,$record->id); return $incident;
+        }); return $request->expectsJson()?response()->json(['received'=>true,'incident_id'=>$incident->id]):back()->with('success','Incident reçu par le responsable.');
+    }
+    public function shareIncident(Request $request, int $incident): RedirectResponse {
+        $this->access->manager($request);
+        $data=$request->validate(['client_message'=>['required','string','max:5000'],'shared_photo_ids'=>['present','array','max:20'],'shared_photo_ids.*'=>['integer'],'status'=>['required','in:open,resolved']]);
+        DB::transaction(function () use ($request,$incident,$data) {
+            $record=$this->access->record($request,Incident::class,$incident);
+            foreach ($data['shared_photo_ids'] as $photoId) { Photo::where('concierge_id',$record->concierge_id)->whereHas('report',fn ($q)=>$q->where('mission_id',$record->mission_id))->findOrFail($photoId); }
+            $record->update([...$data,'shared_by'=>$request->user()->id,'shared_at'=>now()]); $this->access->log($request,'Incident transmis au client : '.$record->id,$record->mission_id);
+        }); return back()->with('success','Les éléments sélectionnés ont été transmis au client.');
+    }
+    public function photo(Request $request, int $photo): StreamedResponse {
+        $member=$this->access->membership($request); $record=$this->access->record($request,Photo::class,$photo); $report=$record->report;
+        $mission=Mission::where('concierge_id',$member->concierge_id)->with('property')->findOrFail($report->mission_id);
+        if ($member->role==='worker') { abort_unless($mission->assigned_user_id===$request->user()->id,404); }
+        if ($member->role==='client') {
+            abort_unless($mission->property->client_id===$member->client_id,404);
+            $shared=Incident::where('concierge_id',$member->concierge_id)->where('mission_id',$mission->id)->whereNotNull('shared_at')->get()->contains(fn ($incident)=>in_array($record->id,$incident->shared_photo_ids??[],true));
+            abort_unless($report->status==='validated' || $shared,404);
+        }
+        return Storage::disk('local')->response($record->path,null,['Cache-Control'=>'private, no-store','X-Content-Type-Options'=>'nosniff']);
+    }
+}

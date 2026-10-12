@@ -1,0 +1,18 @@
+{
+  "name": "Tout en Main — Terrain",
+  "short_name": "Tout en Main",
+  "lang": "fr",
+  "start_url": "/terrain.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f8fa",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
