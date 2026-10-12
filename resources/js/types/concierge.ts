@@ -3,7 +3,7 @@ export type Member = {
     id: number;
     concierge_id: number;
     user_id: number;
-    role: 'manager' | 'worker' | 'client';
+    role: 'manager' | 'worker' | 'client' | 'coordinator';
     client_id: number | null;
     team: string | null;
     company: string | null;
@@ -56,6 +56,7 @@ export type MissionRecord = {
     instructions: string | null;
     accessible_code?: string | null;
     assigned_user_id: number | null;
+    assigned_company?: string | null;
     property: PropertyRecord;
     assignee: Person | null;
     reports: ReportRecord[];

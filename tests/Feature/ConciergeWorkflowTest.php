@@ -242,14 +242,35 @@ test('iCal imports persist and deduplicate UID within a source and place', funct
     $calendar = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:booking-1\r\nDTSTART;VALUE=DATE:20261013\r\nDTEND;VALUE=DATE:20261017\r\nSUMMARY:Période importée\r\nEND:VEVENT\r\nEND:VCALENDAR";
     $payload = ['property_id' => $c['property']->id, 'source' => 'airbnb', 'calendar' => UploadedFile::fake()->createWithContent('calendar.ics', $calendar)];
     $this->actingAs($c['manager'])->post(route('stays.import'), $payload)->assertRedirect();
-    $this->post(route('stays.import'),$payload)->assertRedirect();
-    $this->assertDatabaseCount('stays',1);
-    $this->assertDatabaseHas('stays',['kind' => 'unclassified', 'starts_on' => '2026-10-13', 'ends_on' => '2026-10-17', 'external_uid' => 'booking-1']);
-    $this->assertDatabaseCount('missions',1);
+    $this->post(route('stays.import'), $payload)->assertRedirect();
+    $this->assertDatabaseCount('stays', 1);
+    $this->assertDatabaseHas('stays', ['kind' => 'unclassified', 'starts_on' => '2026-10-13', 'ends_on' => '2026-10-17', 'external_uid' => 'booking-1']);
+    $this->assertDatabaseCount('missions', 1);
 });
-test('invalid iCal files fail atomically without partial stays',function () {
+test('invalid iCal files fail atomically without partial stays', function () {
     $c = conciergeContext();
     $calendar = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:valid\nDTSTART:20261013\nDTEND:20261017\nEND:VEVENT\nBEGIN:VEVENT\nUID:bad\nDTSTART:INVALID\nDTEND:20261017\nEND:VEVENT\nEND:VCALENDAR";
-    $this->actingAs($c['manager'])->post(route('stays.import'),['property_id' => $c['property']->id, 'source' => 'ical', 'calendar' => UploadedFile::fake()->createWithContent('calendar.ics',$calendar)])->assertSessionHasErrors('calendar');
-    $this->assertDatabaseCount('stays',0);
+    $this->actingAs($c['manager'])->post(route('stays.import'), ['property_id' => $c['property']->id, 'source' => 'ical', 'calendar' => UploadedFile::fake()->createWithContent('calendar.ics', $calendar)])->assertSessionHasErrors('calendar');
+    $this->assertDatabaseCount('stays', 0);
+});
+
+test('an enterprise coordinator designates only a person from their own company', function () {
+    $c = conciergeContext();
+    $coordinator = User::factory()->create();
+    Membership::factory()->create(['concierge_id' => $c['concierge']->id, 'user_id' => $coordinator->id, 'role' => 'coordinator', 'company' => 'Entreprise A']);
+    Membership::where('user_id', $c['worker']->id)->update(['company' => 'Entreprise A']);
+    $c['mission']->update(['status' => 'planned', 'assigned_user_id' => null, 'assigned_company' => 'Entreprise A']);
+    $this->actingAs($coordinator)->post(route('missions.designate', $c['mission']->id), ['version' => 1, 'assigned_user_id' => $c['worker']->id])->assertRedirect();
+    $this->assertDatabaseHas('missions', ['id' => $c['mission']->id, 'assigned_user_id' => $c['worker']->id, 'status' => 'planned', 'version' => 2]);
+    $this->actingAs($c['worker'])->post(route('missions.transition', $c['mission']->id), ['action' => 'accept', 'version' => 2])->assertRedirect();
+    $this->assertDatabaseHas('missions', ['id' => $c['mission']->id, 'status' => 'accepted']);
+});
+test('a coordinator cannot designate another company worker or inspect client conversations', function () {
+    $c = conciergeContext();
+    $coordinator = User::factory()->create();
+    Membership::factory()->create(['concierge_id' => $c['concierge']->id, 'user_id' => $coordinator->id, 'role' => 'coordinator', 'company' => 'Entreprise A']);
+    $c['mission']->update(['status' => 'planned', 'assigned_user_id' => null, 'assigned_company' => 'Entreprise A']);
+    Message::factory()->create(['concierge_id' => $c['concierge']->id, 'client_id' => $c['client']->id, 'body' => 'PRIVATE-MESSAGE']);
+    $this->actingAs($coordinator)->postJson(route('missions.designate', $c['mission']->id), ['version' => 1, 'assigned_user_id' => $c['worker']->id])->assertUnprocessable()->assertJsonValidationErrors('assigned_user_id');
+    $this->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page->has('missions', 1)->where('messages', [])->where('requests', [])->where('clients', []));
 });

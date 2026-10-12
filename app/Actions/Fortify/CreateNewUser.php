@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Actions\Concierge\SubscriptionManager;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Models\User;
@@ -12,6 +13,8 @@ class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules, ProfileValidationRules;
 
+    public function __construct(private SubscriptionManager $subscriptions) {}
+
     /**
      * Validate and create a newly registered user.
      *
@@ -19,6 +22,7 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        abort_unless($this->subscriptions->settings()->registration_open, 403, 'Les nouvelles inscriptions sont temporairement fermées.');
         Validator::make($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),

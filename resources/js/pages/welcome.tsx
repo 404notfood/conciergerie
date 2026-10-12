@@ -1,4 +1,7 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { MarketingBody } from '@/components/concierge/marketing-body';
+import { SeoHead } from '@/components/concierge/seo-head';
+import type { MarketingProps } from '@/types/seo';
+import { Link, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
     Building2,
@@ -23,7 +26,7 @@ import {
     PhonePreview,
     ProductPreview,
 } from '@/components/concierge/product-preview';
-import { dashboard, login, register } from '@/routes';
+import { dashboard, login, register, pricing } from '@/routes';
 const steps = [
     {
         icon: CalendarCheck2,
@@ -51,25 +54,21 @@ const steps = [
         text: 'Partagez un suivi clair avec chacun de vos clients.',
     },
 ];
-export default function Welcome() {
+export default function Welcome(props: MarketingProps) {
+    const { content, seo } = props;
     const { auth } = usePage().props;
     const [menuOpen, setMenuOpen] = useState(false);
     const start = auth.user ? dashboard() : register();
     return (
         <div className="brand-surface landing">
-            <Head title="Toute votre conciergerie, au même endroit">
-                <meta
-                    name="description"
-                    content="Planifiez vos missions, coordonnez vos équipes et partagez des comptes rendus validés avec vos clients. Tout en Main, la plateforme de votre conciergerie."
-                />
-            </Head>
+            <SeoHead seo={seo} />
             <a className="skip-link" href="#main">
                 Aller au contenu
             </a>
             <header className="landing-header">
                 <div className="landing-container flex items-center justify-between gap-6">
-                    <Link href="/" aria-label="Tout en Main, accueil">
-                        <Brand />
+                    <Link href="/" aria-label={seo.site_name + ', accueil'}>
+                        <Brand name={seo.site_name} />
                     </Link>
                     <nav
                         className="desktop-nav"
@@ -77,6 +76,8 @@ export default function Welcome() {
                     >
                         <a href="#fonctionnalites">Fonctionnalités</a>
                         <a href="#terrain">Sur le terrain</a>
+                        <Link href={pricing()}>Tarifs</Link>
+                        <Link href="/ressources">Ressources</Link>
                     </nav>
                     <div className="header-actions">
                         <Link href={auth.user ? dashboard() : login()}>
@@ -122,19 +123,22 @@ export default function Welcome() {
                                 La gestion de votre conciergerie
                             </span>
                             <h1>
-                                Toute votre
-                                <br />
-                                conciergerie,{' '}
-                                <br />
-                                organisée au
-                                <br />
-                                <span>même endroit.</span>
+                                {content.heading ===
+                                'Toute votre conciergerie, organisée au même endroit.' ? (
+                                    <>
+                                        Toute votre
+                                        <br />
+                                        conciergerie,
+                                        <br />
+                                        organisée au
+                                        <br />
+                                        <span>même endroit.</span>
+                                    </>
+                                ) : (
+                                    content.heading
+                                )}
                             </h1>
-                            <p>
-                                Planifiez vos missions, coordonnez vos équipes
-                                et partagez des comptes rendus clairs avec vos
-                                clients.
-                            </p>
+                            <p>{content.intro}</p>
                             <div className="hero-actions">
                                 <Link className="brand-button" href={start}>
                                     Créer mon espace <ArrowRight size={16} />
@@ -162,7 +166,7 @@ export default function Welcome() {
                             </div>
                         </div>
                         <div className="hero-preview">
-                            <ProductPreview />
+                            <ProductPreview name={seo.site_name} />
                             <div className="preview-floating">
                                 <span>
                                     <CheckCheck size={17} />
@@ -323,12 +327,16 @@ export default function Welcome() {
                         </p>
                     </div>
                 </section>
+                <MarketingBody {...props} />
             </main>
             <footer className="landing-footer">
                 <div className="landing-container">
-                    <Brand compact />
+                    <Brand compact name={seo.site_name} />
                     <p>La plateforme de gestion des conciergeries</p>
                     <nav>
+                        <Link href="/ressources">
+                            Guides et fonctionnalités
+                        </Link>
                         <a href="#fonctionnalites">Fonctionnalités</a>
                         <a href="#terrain">Sur le terrain</a>
                     </nav>

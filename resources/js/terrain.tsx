@@ -47,6 +47,7 @@ type TerrainMission = {
     incident_url: string;
 };
 type Bundle = {
+    app_name?: string;
     identity: string;
     user: { id: number; name: string };
     concierge: string;
@@ -164,8 +165,8 @@ function Terrain() {
             if (!stored) throw new Error('Préparation introuvable.');
             const loaded = await decrypt<Bundle>(derived, stored);
             if (navigator.onLine) {
-                const server = await fetchBundle();
-                if (server.identity !== loaded.identity)
+                const server = await fetchBundle().catch(() => null);
+                if (server && server.identity !== loaded.identity)
                     throw new Error(
                         'Cet appareil contient les preuves d’un autre compte. Connectez-vous au compte qui les a préparées.',
                     );
@@ -593,6 +594,54 @@ function Terrain() {
         }, 500);
         return () => clearTimeout(timer);
     }, [online, ready, bundle, dirty]);
+    async function selectAccount() {
+        setBusy(true);
+        try {
+            const fresh = await fetchBundle();
+            const selectedMeta = await readVault<VaultMeta>(
+                fresh.identity + ':meta',
+            );
+            setMeta(selectedMeta ?? null);
+            setPin('');
+            setNote(
+                selectedMeta
+                    ? 'Retrouvez ce compte avec son code local.'
+                    : 'Préparez ce compte avec un nouveau code local. Les preuves des autres comptes restent chiffrées sur cet appareil.',
+            );
+        } catch (error) {
+            setNote(
+                error instanceof Error
+                    ? error.message
+                    : 'Compte connecté non disponible.',
+            );
+        } finally {
+            setBusy(false);
+        }
+    }
+    function exportProofs() {
+        if (!current) return;
+        const data = {
+            author: bundle?.user,
+            concierge: bundle?.concierge,
+            mission: {
+                ...current.mission,
+                property: { ...current.mission.property, access_code: null },
+            },
+            notes: current.notes,
+            answers: current.answers,
+            photos: current.photos,
+            incident: current.incident,
+            state: current.state,
+        };
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(
+            new Blob([JSON.stringify(data)], { type: 'application/json' }),
+        );
+        link.href = url;
+        link.download = 'preuves-mission-' + current.mission.id + '.json';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
     function lock() {
         key.current = null;
         setBundle(null);
@@ -620,7 +669,7 @@ function Terrain() {
                 >
                     <ArrowLeft size={20} />
                 </a>
-                <Brand compact />
+                <Brand compact name={bundle?.app_name} />
                 <span
                     className={
                         'terrain-connection ' + (online ? '' : 'offline')
@@ -721,6 +770,15 @@ function Terrain() {
                                 </button>
                             )}
                         </div>
+                        {online ? (
+                            <button
+                                className="mt-4 text-xs text-teal"
+                                disabled={busy}
+                                onClick={() => void selectAccount()}
+                            >
+                                Utiliser le compte actuellement connecté
+                            </button>
+                        ) : null}
                         <p className="form-hint mt-4">
                             Appareil personnel recommandé. Gardez ce code : sans
                             lui, les fichiers chiffrés ne peuvent pas être
@@ -1037,6 +1095,15 @@ function Terrain() {
                                             conservés.
                                         </p>
                                     )}
+                                    {current.state === 'conflict' ? (
+                                        <button
+                                            className="brand-button small secondary mt-4"
+                                            onClick={exportProofs}
+                                        >
+                                            Exporter les preuves pour le
+                                            responsable
+                                        </button>
+                                    ) : null}
                                     {current.state === 'conflict' ? (
                                         <p className="form-hint mt-4">
                                             La soumission est bloquée. Vos

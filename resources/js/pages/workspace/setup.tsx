@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Brand } from '@/components/concierge/brand';
+import { InertiaBrand as Brand } from '@/components/concierge/brand';
 import { BusinessForm, Field } from '@/components/concierge/business-form';
 import { store } from '@/routes/workspace';
 import { logout } from '@/routes';

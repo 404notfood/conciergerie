@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Concierge\SubmitReport;
 use App\Actions\Concierge\QuotaGate;
+use App\Actions\Concierge\SubmitReport;
 use App\Actions\Concierge\WorkspaceAccess;
 use App\Models\Incident;
 use App\Models\Mission;
@@ -26,11 +26,14 @@ class MissionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)], 'assigned_user_id' => ['nullable', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)], 'title' => ['required', 'string', 'max:120'], 'kind' => ['required', Rule::in(['service', 'initial', 'arrival', 'departure'])], 'scheduled_at' => ['required', 'date'], 'duration' => ['required', 'integer', 'min:5', 'max:1440'], 'instructions' => ['nullable', 'string', 'max:5000']]);
+        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)], 'assigned_company' => ['nullable', 'string', 'max:120', Rule::exists('memberships', 'company')->where('concierge_id', $member->concierge_id)->where('role', 'coordinator')], 'assigned_user_id' => ['nullable', Rule::prohibitedIf($request->filled('assigned_company')), Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)], 'title' => ['required', 'string', 'max:120'], 'kind' => ['required', Rule::in(['service', 'initial', 'arrival', 'departure'])], 'scheduled_at' => ['required', 'date'], 'duration' => ['required', 'integer', 'min:5', 'max:1440'], 'instructions' => ['nullable', 'string', 'max:5000']]);
+        if ($data['assigned_company'] ?? false) {
+            $this->quotas->feature($request, 'subcontracting');
+        }
         $data['scheduled_at'] = Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc();
         $template = ServiceTemplate::whereKey($data['template_id'])->firstOrFail();
         unset($data['template_id']);
-        $this->quotas->mutate($request,['missions_month'=>1],function () use ($request, $data, $member, $template) {
+        $this->quotas->mutate($request, ['missions_month' => 1], function () use ($request, $data, $member, $template) {
             $mission = Mission::create([...$data, 'concierge_id' => $member->concierge_id, 'checklist' => $template->checklist]);
             $this->access->log($request, 'Mission planifiée : '.$mission->title, $mission->id);
         });
@@ -41,7 +44,7 @@ class MissionController extends Controller
     public function transition(Request $request, int $mission): RedirectResponse
     {
         $member = $this->access->membership($request);
-        abort_if($member->role === 'client', 403);
+        abort_unless(in_array($member->role, ['manager', 'worker'], true), 403);
         $data = $request->validate(['action' => ['required', Rule::in(['accept', 'start', 'cancel', 'reassign'])], 'version' => ['required', 'integer'], 'assigned_user_id' => ['nullable', 'required_if:action,reassign', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])]]);
         DB::transaction(function () use ($request, $mission, $member, $data) {
             $record = Mission::where('concierge_id', $member->concierge_id)->lockForUpdate()->findOrFail($mission);
@@ -60,11 +63,27 @@ class MissionController extends Controller
                 abort_unless($record->status === 'accepted', 409);
             }
             $status = ['accept' => 'accepted', 'start' => 'in_progress', 'cancel' => 'cancelled', 'reassign' => 'planned'][$action];
-            $record->update(['status' => $status, 'version' => $record->version + 1, ...($action === 'reassign' ? ['assigned_user_id' => $data['assigned_user_id']] : [])]);
+            $record->update(['status' => $status, 'version' => $record->version + 1, ...($action === 'reassign' ? ['assigned_user_id' => $data['assigned_user_id'], 'assigned_company' => null] : [])]);
             $this->access->log($request, ['accept' => 'Mission acceptée', 'start' => 'Mission commencée', 'cancel' => 'Mission annulée', 'reassign' => 'Mission réaffectée'][$action].' : '.$record->title, $record->id);
         });
 
         return back()->with('success', 'Mission mise à jour.');
+    }
+
+    public function designate(Request $request, int $mission): RedirectResponse
+    {
+        $member = $this->access->membership($request);
+        abort_unless($member->role === 'coordinator', 403);
+        $this->quotas->feature($request, 'subcontracting');
+        $data = $request->validate(['version' => ['required', 'integer'], 'assigned_user_id' => ['required', 'integer', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->where('company', $member->company)->where('role', 'worker')]]);
+        DB::transaction(function () use ($request, $member, $mission, $data) {
+            $record = Mission::where('concierge_id', $member->concierge_id)->where('assigned_company', $member->company)->lockForUpdate()->findOrFail($mission);
+            abort_unless($record->status === 'planned' && $record->version === (int) $data['version'], 409, 'La mission a changé.');
+            $record->update(['assigned_user_id' => $data['assigned_user_id'], 'version' => $record->version + 1]);
+            $this->access->log($request, 'Intervenant désigné par '.$member->company.' : '.$record->title, $record->id);
+        });
+
+        return back()->with('success', 'Intervenant désigné. Il doit maintenant accepter la mission.');
     }
 
     public function report(Request $request, int $mission, SubmitReport $submit): RedirectResponse|JsonResponse
@@ -138,15 +157,18 @@ class MissionController extends Controller
         $record = $this->access->record($request, Photo::class, $photo);
         $report = $record->report;
         $mission = Mission::where('concierge_id', $member->concierge_id)->with('property')->whereKey($report->mission_id)->firstOrFail();
+        if ($member->role === 'coordinator') {
+            abort_unless($mission->assigned_company === $member->company, 404);
+        }
         if ($member->role === 'worker') {
             abort_unless($mission->assigned_user_id === $request->user()->id, 404);
         }
         if ($member->role === 'client') {
             abort_unless($mission->property->client_id === $member->client_id, 404);
-            $shared = Incident::where('concierge_id', $member->concierge_id)->where('mission_id', $mission->id)->whereNotNull('shared_at')->get()->contains(fn ($incident) => in_array($record->id,$incident->shared_photo_ids ?? [],true));
-            abort_unless($report->status === 'validated' || $shared,404);
+            $shared = Incident::where('concierge_id', $member->concierge_id)->where('mission_id', $mission->id)->whereNotNull('shared_at')->get()->contains(fn ($incident) => in_array($record->id, $incident->shared_photo_ids ?? [], true));
+            abort_unless($report->status === 'validated' || $shared, 404);
         }
 
-        return Storage::disk('local')->response($record->path,null,['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+        return Storage::disk('local')->response($record->path, null, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 }

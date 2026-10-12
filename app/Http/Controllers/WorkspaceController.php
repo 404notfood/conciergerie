@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Concierge\WorkspaceAccess;
 use App\Actions\Concierge\SubscriptionManager;
+use App\Actions\Concierge\WorkspaceAccess;
 use App\Models\Activity;
 use App\Models\Client;
 use App\Models\Concierge;
@@ -29,8 +29,10 @@ class WorkspaceController extends Controller
 
     public function index(Request $request): Response|RedirectResponse
     {
-        if($request->user()->is_admin&&!$request->session()->has('admin_concierge_id')){return to_route('admin.index');}
-        if (!$request->user()->is_admin&&! Membership::where('user_id', $request->user()->id)->exists()) {
+        if ($request->user()->is_admin && ! $request->session()->has('admin_concierge_id')) {
+            return to_route('admin.index');
+        }
+        if (! $request->user()->is_admin && ! Membership::where('user_id', $request->user()->id)->exists()) {
             return Inertia::render('workspace/setup');
         }
         $member = $this->access->membership($request);
@@ -40,6 +42,11 @@ class WorkspaceController extends Controller
         $incidents = Incident::where('concierge_id', $tenant)->with(['mission.property', 'author']);
         $requests = InterventionRequest::where('concierge_id', $tenant)->with(['property', 'author']);
         $messages = Message::where('concierge_id', $tenant)->with('author');
+        if ($member->role === 'coordinator') {
+            $missions->where('assigned_company', $member->company);
+            $properties->whereIn('id', Mission::where('concierge_id', $tenant)->where('assigned_company', $member->company)->select('property_id'));
+            $incidents->whereHas('mission', fn ($q) => $q->where('assigned_company', $member->company));
+        }
         if ($member->role === 'worker') {
             $missions->where('assigned_user_id', $request->user()->id);
             $properties->whereIn('id', Mission::where('concierge_id', $tenant)->where('assigned_user_id', $request->user()->id)->select('property_id'));
@@ -80,24 +87,24 @@ class WorkspaceController extends Controller
 
         return Inertia::render('workspace/index', [
             'concierge' => Concierge::findOrFail($tenant),
-            'subscriptionSummary'=>$member->role==='manager'?['subscription'=>$this->subscriptions->ensure($tenant),'limits'=>$this->subscriptions->limits($this->subscriptions->ensure($tenant)),'usage'=>$this->subscriptions->usage($tenant),'monthly_price_cents'=>$this->subscriptions->price($this->subscriptions->ensure($tenant))]:null, 'membership' => $member,
+            'subscriptionSummary' => $member->role === 'manager' ? ['subscription' => $this->subscriptions->ensure($tenant), 'limits' => $this->subscriptions->limits($this->subscriptions->ensure($tenant)), 'usage' => $this->subscriptions->usage($tenant), 'monthly_price_cents' => $this->subscriptions->price($this->subscriptions->ensure($tenant))] : null, 'membership' => $member,
             'workspaces' => Membership::where('user_id', $request->user()->id)->with('concierge')->get(),
             'missions' => $missionData, 'properties' => $propertyData,
             'clients' => $member->role === 'manager' ? Client::where('concierge_id', $tenant)->orderBy('name')->get() : ($member->role === 'client' ? Client::where('id', $member->client_id)->get() : []),
-            'members' => $member->role === 'manager' ? Membership::where('concierge_id', $tenant)->with('user:id,name,email')->get() : [],
+            'members' => $member->role === 'manager' ? Membership::where('concierge_id', $tenant)->with('user:id,name,email')->get() : ($member->role === 'coordinator' ? Membership::where('concierge_id', $tenant)->where('company', $member->company)->where('role', 'worker')->with('user:id,name,email')->get() : []),
             'templates' => $member->role === 'manager' ? ServiceTemplate::where('concierge_id', $tenant)->orderBy('id')->get() : [],
             'stays' => $member->role === 'manager' ? Stay::where('concierge_id', $tenant)->with('property')->orderBy('starts_on')->get() : [],
-            'incidents' => $incidentData, 'requests' => $member->role !== 'worker' ? $requests->latest('id')->get() : [],
-            'messages' => $member->role !== 'worker' ? $messages->orderBy('id')->get() : [],
+            'incidents' => $incidentData, 'requests' => in_array($member->role, ['manager', 'client'], true) ? $requests->latest('id')->get() : [],
+            'messages' => in_array($member->role, ['manager', 'client'], true) && ($this->subscriptions->features($this->subscriptions->ensure($tenant))['messaging'] ?? false) ? $messages->orderBy('id')->get() : [],
             'activities' => $member->role === 'manager' ? Activity::where('concierge_id', $tenant)->with('user:id,name')->latest('id')->limit(30)->get() : [],
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $settings=$this->subscriptions->settings();
-        abort_unless($settings->registration_open,403,'Les nouvelles inscriptions sont temporairement fermées.');
-        abort_unless(SubscriptionPlan::whereKey($settings->default_plan_id)->where('is_active',true)->exists(),403,'Aucune offre d’inscription active.');
+        $settings = $this->subscriptions->settings();
+        abort_unless($settings->registration_open, 403, 'Les nouvelles inscriptions sont temporairement fermées.');
+        abort_unless(SubscriptionPlan::whereKey($settings->default_plan_id)->where('is_active', true)->exists(), 403, 'Aucune offre d’inscription active.');
         $data = $request->validate(['name' => ['required', 'string', 'max:120']]);
         DB::transaction(function () use ($request, $data) {
             $request->user()->newQuery()->whereKey($request->user()->id)->lockForUpdate()->first();
@@ -113,15 +120,19 @@ class WorkspaceController extends Controller
         return to_route('dashboard')->with('success', 'Votre espace est prêt. Ajoutez votre premier client.');
     }
 
-    public function subscription(Request $request): Response {
-        $member=$this->access->manager($request);$subscription=$this->subscriptions->ensure($member->concierge_id);
-        return Inertia::render('workspace/subscription',['subscription'=>$subscription,'limits'=>$this->subscriptions->limits($subscription),'features'=>$this->subscriptions->features($subscription),'usage'=>$this->subscriptions->usage($member->concierge_id),'monthly_price_cents'=>$this->subscriptions->price($subscription),'limitLabels'=>SubscriptionManager::LIMITS,'featureLabels'=>SubscriptionManager::FEATURES,'blocked'=>!$this->subscriptions->usable($subscription)]);
+    public function subscription(Request $request): Response
+    {
+        $member = $this->access->manager($request);
+        $subscription = $this->subscriptions->ensure($member->concierge_id);
+
+        return Inertia::render('workspace/subscription', ['subscription' => $subscription, 'limits' => $this->subscriptions->limits($subscription), 'features' => $this->subscriptions->features($subscription), 'usage' => $this->subscriptions->usage($member->concierge_id), 'monthly_price_cents' => $this->subscriptions->price($subscription), 'limitLabels' => SubscriptionManager::LIMITS, 'featureLabels' => SubscriptionManager::FEATURES, 'blocked' => ! $this->subscriptions->usable($subscription)]);
     }
+
     public function switch(Request $request): RedirectResponse
     {
         $data = $request->validate(['concierge_id' => ['required', 'integer']]);
         Membership::where('user_id', $request->user()->id)->where('concierge_id', $data['concierge_id'])->firstOrFail();
-        $request->session()->put('concierge_id',$data['concierge_id']);
+        $request->session()->put('concierge_id', $data['concierge_id']);
 
         return to_route('dashboard');
     }

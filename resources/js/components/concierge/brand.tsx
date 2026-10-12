@@ -1,5 +1,15 @@
 import AppLogoIcon from '@/components/app-logo-icon';
-export function Brand({ compact = false }: { compact?: boolean }) {
+import { usePage } from '@inertiajs/react';
+export function InertiaBrand({ compact = false }: { compact?: boolean }) {
+    return <Brand compact={compact} name={usePage().props.name} />;
+}
+export function Brand({
+    compact = false,
+    name = import.meta.env.VITE_APP_NAME || 'Tout en Main',
+}: {
+    compact?: boolean;
+    name?: string;
+}) {
     return (
         <span className="brand flex items-center gap-3">
             <AppLogoIcon className={compact ? 'size-6' : 'size-9'} />
@@ -10,7 +20,8 @@ export function Brand({ compact = false }: { compact?: boolean }) {
                         : 'text-xl font-bold tracking-tight'
                 }
             >
-                Tout en Main<span className="brand-dot">.</span>
+                {name}
+                <span className="brand-dot">.</span>
             </span>
         </span>
     );

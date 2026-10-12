@@ -23,7 +23,7 @@ import {
     Users,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Brand } from '@/components/concierge/brand';
+import { InertiaBrand as Brand } from '@/components/concierge/brand';
 import {
     BusinessForm,
     Field,
@@ -39,6 +39,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { dashboard, logout } from '@/routes';
+import { show as showSubscription } from '@/routes/subscription';
+import { leave as leaveAdministration } from '@/routes/admin';
 import * as clientRoutes from '@/routes/clients';
 import * as propertyRoutes from '@/routes/properties';
 import * as memberRoutes from '@/routes/members';
@@ -87,6 +89,7 @@ const roleNames = {
     manager: 'Responsable',
     worker: 'Intervenant',
     client: 'Client',
+    coordinator: 'Responsable prestataire',
 };
 const propertyKinds = [
     { value: 'rental', label: 'Location saisonnière' },
@@ -304,7 +307,7 @@ function Calendar({
     );
 }
 export default function Workspace(props: WorkspaceProps) {
-    const { auth, success } = usePage<{ success?: string }>().props;
+    const { auth, success, name } = usePage<{ success?: string }>().props;
     const { url } = usePage();
     const rawView =
         new URL(url, 'http://local').searchParams.get('view') ?? 'overview';
@@ -325,6 +328,7 @@ export default function Workspace(props: WorkspaceProps) {
         () => props.clients[0]?.id ?? null,
     );
     const [memberRole, setMemberRole] = useState('worker');
+    const [assignmentMode, setAssignmentMode] = useState('individual');
     const [requestDecision, setRequestDecision] = useState('accepted');
     const [receiptId, setReceiptId] = useState('');
     const selectedMission = props.missions.find(
@@ -407,7 +411,7 @@ export default function Workspace(props: WorkspaceProps) {
         label: p.name,
     }));
     const assigneeOptions = props.members
-        .filter((m) => m.role !== 'client')
+        .filter((m) => m.role === 'manager' || m.role === 'worker')
         .map((m) => ({
             value: m.user_id,
             label: m.user.name + (m.company ? ' · ' + m.company : ''),
@@ -444,6 +448,7 @@ export default function Workspace(props: WorkspaceProps) {
         'decide-request': 'Traiter la demande',
         'new-request': 'Demander une intervention',
         reassign: 'Réaffecter la mission',
+        designate: 'Désigner l’intervenant de votre entreprise',
     };
     return (
         <div className="workspace">
@@ -505,7 +510,14 @@ export default function Workspace(props: WorkspaceProps) {
                             </a>
                         </div>
                     ) : null}
-                    <span>Tout en Main · Votre espace privé</span>
+                    <span>
+                        {isManager ? (
+                            <Link href={showSubscription()}>
+                                Mon abonnement →
+                            </Link>
+                        ) : null}
+                    </span>
+                    <span>{name} · Votre espace privé</span>
                 </div>
             </aside>
             <div className="workspace-main">
@@ -539,6 +551,20 @@ export default function Workspace(props: WorkspaceProps) {
                     </div>
                 </header>
                 <main className="workspace-content">
+                    {auth.user.is_admin === true ? (
+                        <div className="notice admin-visit-notice">
+                            <ShieldAdminIcon />
+                            Vous consultez cet espace en tant qu’administrateur
+                            global.
+                            <Link
+                                href={leaveAdministration()}
+                                as="button"
+                                className="ml-auto font-semibold"
+                            >
+                                Retour à l’administration
+                            </Link>
+                        </div>
+                    ) : null}
                     {success ? (
                         <div className="notice" role="status">
                             <CheckCheck size={17} />
@@ -1621,6 +1647,10 @@ export default function Workspace(props: WorkspaceProps) {
                                     { value: 'worker', label: 'Intervenant' },
                                     { value: 'manager', label: 'Responsable' },
                                     { value: 'client', label: 'Client' },
+                                    {
+                                        value: 'coordinator',
+                                        label: 'Responsable d’une société prestataire',
+                                    },
                                 ]}
                             />
                             {memberRole === 'client' ? (
@@ -1639,6 +1669,7 @@ export default function Workspace(props: WorkspaceProps) {
                                     <Field
                                         label="Société prestataire (facultatif)"
                                         name="company"
+                                        required={memberRole === 'coordinator'}
                                     />
                                 </div>
                             )}
@@ -1739,11 +1770,46 @@ export default function Workspace(props: WorkspaceProps) {
                                     />
                                 </div>
                                 <SelectField
-                                    label="Intervenant"
-                                    name="assigned_user_id"
-                                    items={assigneeOptions}
-                                    empty="À affecter"
+                                    name="assignment_mode"
+                                    label="Mode d’affectation"
+                                    empty=""
+                                    defaultValue={assignmentMode}
+                                    onChange={setAssignmentMode}
+                                    items={[
+                                        {
+                                            value: 'individual',
+                                            label: 'Choisir une personne',
+                                        },
+                                        {
+                                            value: 'company',
+                                            label: 'Confier à une entreprise prestataire',
+                                        },
+                                    ]}
                                 />
+                                {assignmentMode === 'individual' ? (
+                                    <SelectField
+                                        label="Intervenant"
+                                        name="assigned_user_id"
+                                        items={assigneeOptions}
+                                        empty="À affecter"
+                                    />
+                                ) : (
+                                    <SelectField
+                                        name="assigned_company"
+                                        label="Entreprise prestataire"
+                                        required
+                                        items={props.members
+                                            .filter(
+                                                (m) =>
+                                                    m.role === 'coordinator' &&
+                                                    m.company,
+                                            )
+                                            .map((m) => ({
+                                                value: m.company!,
+                                                label: m.company!,
+                                            }))}
+                                    />
+                                )}
                                 <SelectField
                                     label="Nature du contrôle"
                                     name="kind"
@@ -1876,6 +1942,15 @@ export default function Workspace(props: WorkspaceProps) {
                     {modal === 'mission-detail' && selectedMission ? (
                         <>
                             <Status status={selectedMission.status} />
+                            {props.membership.role === 'coordinator' &&
+                            selectedMission.status === 'planned' ? (
+                                <button
+                                    className="brand-button small"
+                                    onClick={() => open('designate')}
+                                >
+                                    Désigner un intervenant
+                                </button>
+                            ) : null}
                             <div className="mission-detail-meta">
                                 <div>
                                     <b>Intervention</b>
@@ -2023,7 +2098,8 @@ export default function Workspace(props: WorkspaceProps) {
                                     ) : null}
                                 </>
                             ) : null}
-                            {!isClient ? (
+                            {!isClient &&
+                            props.membership.role !== 'coordinator' ? (
                                 <div className="mt-3 flex flex-wrap gap-3">
                                     {selectedMission.status === 'planned' &&
                                     selectedMission.assigned_user_id ===
@@ -2363,6 +2439,31 @@ export default function Workspace(props: WorkspaceProps) {
                             </p>
                         </BusinessForm>
                     ) : null}
+                    {modal === 'designate' && selectedMission ? (
+                        <BusinessForm
+                            action={missionRoutes.designate.url(
+                                selectedMission.id,
+                            )}
+                            onSuccess={close}
+                            submit="Désigner cet intervenant"
+                        >
+                            <input
+                                name="version"
+                                type="hidden"
+                                value={selectedMission.version}
+                            />
+                            <SelectField
+                                name="assigned_user_id"
+                                label="Personne de votre entreprise"
+                                items={assigneeOptions}
+                                required
+                            />
+                            <p className="form-hint">
+                                La personne désignée devra accepter la mission
+                                avec son propre compte.
+                            </p>
+                        </BusinessForm>
+                    ) : null}
                 </DialogContent>
             </Dialog>
         </div>
@@ -2449,4 +2550,8 @@ function ReportForm({
             </p>
         </BusinessForm>
     );
+}
+
+function ShieldAdminIcon() {
+    return <Settings size={17} />;
 }

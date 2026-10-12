@@ -1,9 +1,12 @@
 <?php
+
 namespace App\Models;
+
+use Database\Factories\PlanAddonFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 /**
  * @property int $id
  * @property string $name
@@ -14,8 +17,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $description
  */
 #[Fillable(['name', 'monthly_price_cents', 'limit_bonus', 'features', 'is_active', 'description'])]
-class PlanAddon extends Model {
-    /** @use HasFactory<\Database\Factories\PlanAddonFactory> */
+class PlanAddon extends Model
+{
+    /** @use HasFactory<PlanAddonFactory> */
     use HasFactory;
-    protected function casts(): array {return ['monthly_price_cents' => 'integer', 'limit_bonus' => 'array', 'features' => 'array', 'is_active' => 'boolean'];}
+
+    protected function casts(): array
+    {
+        return ['monthly_price_cents' => 'integer', 'limit_bonus' => 'array', 'features' => 'array', 'is_active' => 'boolean'];
+    }
 }

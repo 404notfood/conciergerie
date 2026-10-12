@@ -23,14 +23,14 @@ const menu = [
     { label: 'Documents', icon: FileText },
     { label: 'Paramètres', icon: Settings },
 ];
-export function ProductPreview() {
+export function ProductPreview({ name }: { name?: string }) {
     return (
         <div
             className="product-preview"
             aria-label="Aperçu illustratif du tableau de bord"
         >
             <div className="preview-top">
-                <Brand compact />
+                <Brand compact name={name} />
                 <span className="preview-profile">
                     <Bell size={14} />
                     <b>CB</b> Chloé B.

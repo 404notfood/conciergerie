@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Brand } from '@/components/concierge/brand';
+import { InertiaBrand as Brand } from '@/components/concierge/brand';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 export default function AuthSimpleLayout({
