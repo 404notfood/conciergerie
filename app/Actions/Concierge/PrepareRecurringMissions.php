@@ -5,6 +5,7 @@ namespace App\Actions\Concierge;
 use App\Models\Concierge;
 use App\Models\MissionRecurrence;
 use App\Models\RecurrenceOccurrence;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -50,7 +51,7 @@ class PrepareRecurringMissions
         return $count;
     }
 
-    public function next(MissionRecurrence $rule, Carbon $day): Carbon
+    public function next(MissionRecurrence $rule, CarbonInterface $day): CarbonInterface
     {
         if ($rule->frequency === 'monthly') {
             $next = $day->copy()->startOfMonth()->addMonths($rule->interval);

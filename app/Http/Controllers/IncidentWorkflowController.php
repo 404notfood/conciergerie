@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Concierge;
-
 use App\Actions\Concierge\NotifyActivity;
 use App\Actions\Concierge\QuotaGate;
 use App\Actions\Concierge\ScheduleGuard;
 use App\Actions\Concierge\WorkspaceAccess;
+use App\Models\Concierge;
 use App\Models\Incident;
 use App\Models\IncidentEvent;
+use App\Models\Membership;
 use App\Models\Mission;
 use App\Models\Photo;
 use App\Models\ServiceTemplate;
@@ -33,8 +33,8 @@ class IncidentWorkflowController extends Controller
             $record = Incident::where('concierge_id', $member->concierge_id)->lockForUpdate()->findOrFail($incident);
             abort_unless($record->version === (int) $data['version'], 409, 'Ce dossier a changé. Actualisez la page.');
             abort_if($record->status === 'resolved', 409, 'Rouvrez le dossier avant de modifier son suivi.');
-            $record->update(['priority' => $data['priority'], 'responsible_user_id' => $data['responsible_user_id'], 'status' => $data['responsible_user_id'] ? 'in_progress' : 'open', 'version' => $record->version + 1]);
-            $this->event($request, $record, 'assigned', $data['note'] ?: 'Responsable et priorité mis à jour.');
+            $record->update(['priority' => $data['priority'], 'responsible_user_id' => ($data['responsible_user_id'] ?? null), 'status' => ($data['responsible_user_id'] ?? null) ? 'in_progress' : 'open', 'version' => $record->version + 1]);
+            $this->event($request, $record, 'assigned', $data['note'] ?? 'Responsable et priorité mis à jour.');
             $this->notify($record, $request->user()->id);
         });
 
@@ -111,6 +111,10 @@ class IncidentWorkflowController extends Controller
 
     private function notify(Incident $record, int $actorId): void
     {
-        $this->notifications->send($record->concierge_id, $this->notifications->managers($record->concierge_id), 'incident_updated', 'incident:'.$record->id.':'.$record->version, 'Le suivi d’un incident a été mis à jour.', 'incidents', $actorId);
+        $recipients = $this->notifications->managers($record->concierge_id);
+        if ($record->responsible_user_id) {
+            $recipients = $recipients->merge(Membership::where('concierge_id', $record->concierge_id)->where('user_id', $record->responsible_user_id)->get())->unique('user_id');
+        }
+        $this->notifications->send($record->concierge_id, $recipients, 'incident_updated', 'incident:'.$record->id.':'.$record->version, 'Le suivi d’un incident a été mis à jour.', 'incidents', $actorId);
     }
 }

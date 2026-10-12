@@ -62,6 +62,17 @@ export type MissionRecord = {
     reports: ReportRecord[];
 };
 export type IncidentRecord = {
+    version: number;
+    priority: string;
+    responsible_user_id: number | null;
+    responsible?: { id: number; name: string } | null;
+    repair_mission_id: number | null;
+    events: {
+        id: number;
+        description: string;
+        created_at: string;
+        user: { name: string };
+    }[];
     id: number;
     mission_id: number;
     description: string;
@@ -108,6 +119,10 @@ export type ActivityRecord = {
     created_at: string;
 };
 export type WorkspaceProps = {
+    notificationInbox: import('./operations').NotificationInbox;
+    recurrences: import('./operations').Recurrence[];
+    occurrences: import('./operations').Occurrence[];
+    availabilities: import('./operations').Availability[];
     concierge: { id: number; name: string };
     membership: Member;
     workspaces: Member[];

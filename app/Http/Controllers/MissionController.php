@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Concierge;
-
-use App\Actions\Concierge\QuotaGate;
 use App\Actions\Concierge\NotifyActivity;
+use App\Actions\Concierge\QuotaGate;
 use App\Actions\Concierge\ScheduleGuard;
-use App\Models\IncidentEvent;
-use App\Models\Membership;
 use App\Actions\Concierge\SubmitReport;
 use App\Actions\Concierge\WorkspaceAccess;
+use App\Models\Concierge;
 use App\Models\Incident;
+use App\Models\IncidentEvent;
+use App\Models\Membership;
 use App\Models\Mission;
 use App\Models\Photo;
 use App\Models\Report;
@@ -176,7 +175,7 @@ class MissionController extends Controller
             Concierge::whereKey($this->access->membership($request)->concierge_id)->lockForUpdate()->firstOrFail();
             $record = $this->access->record($request, Incident::class, $incident);
             foreach ($data['shared_photo_ids'] as $photoId) {
-                Photo::where('concierge_id', $record->concierge_id)->whereHas('report', fn ($q) => $q->whereIn('mission_id', array_filter([$record->mission_id, $record->repair_mission_id])))->findOrFail($photoId);
+                Photo::where('concierge_id', $record->concierge_id)->whereHas('report', fn ($q) => $q->where(fn ($reports) => $reports->where('mission_id', $record->mission_id)->orWhere(fn ($repair) => $repair->where('mission_id', $record->repair_mission_id)->where('status', 'validated'))))->findOrFail($photoId);
             }
             unset($data['status']);
             $record->update([...$data, 'shared_status' => $record->status, 'version' => $record->version + 1, 'shared_by' => $request->user()->id, 'shared_at' => now()]);

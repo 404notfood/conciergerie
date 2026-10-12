@@ -6,12 +6,12 @@ use App\Models\Membership;
 use App\Models\Mission;
 use App\Models\StaffAvailability;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Validation\ValidationException;
 
 class ScheduleGuard
 {
-    public function check(int $tenant, ?int $userId, Carbon $start, int $duration, ?int $exceptMission = null): void
+    public function check(int $tenant, ?int $userId, CarbonInterface $start, int $duration, ?int $exceptMission = null): void
     {
         if (! $userId) {
             return;

@@ -14,7 +14,7 @@ class NotifyActivity
 {
     public const EVENTS = [
         'mission_assigned' => 'Mission attribuée ou modifiée',
-        'mission_response' => 'Acceptation d’une mission',
+        'mission_response' => 'Acceptation ou réponse attendue',
         'report_submitted' => 'Compte rendu à contrôler',
         'report_reviewed' => 'Validation ou demande de reprise',
         'incident_created' => 'Incident signalé',

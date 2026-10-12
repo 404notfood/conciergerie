@@ -3442,3 +3442,216 @@ textarea:focus-visible {
         padding: 18px;
     }
 }
+.operations-stack {
+    display: grid;
+    gap: 22px;
+}
+.operation-settings {
+    padding: 25px;
+}
+.operation-settings h2 {
+    font-size: 20px;
+    font-weight: 650;
+    margin-bottom: 12px;
+}
+.operation-settings .business-form {
+    margin-top: 20px;
+}
+.operation-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.operation-actions label {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.operation-bell {
+    position: relative;
+    display: inline-flex;
+}
+.operation-bell > span {
+    position: absolute;
+    right: -12px;
+    top: -10px;
+    background: #0f766e;
+    border: 2px solid white;
+    border-radius: 20px;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    min-width: 19px;
+    text-align: center;
+}
+.notification-list > article {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 20px 23px;
+    border-bottom: 1px solid var(--ws-border);
+}
+.notification-list > article.unread {
+    background: #0f766e08;
+}
+.notification-marker {
+    height: 7px;
+    width: 7px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #cbd5e1;
+}
+.unread > .notification-marker {
+    background: #0f766e;
+}
+.notification-list article > div {
+    flex: 1;
+}
+.notification-list b,
+.operation-list b {
+    font-size: 13px;
+    font-weight: 650;
+}
+.notification-list p,
+.operation-list p {
+    font-size: 12px;
+    line-height: 1.8;
+    color: #64748b;
+    margin: 6px 0;
+}
+.notification-list small,
+.operation-list small {
+    font-size: 11px;
+    color: #64748b;
+}
+.notification-preferences {
+    overflow-x: auto;
+}
+.notification-preferences > div {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) 65px 90px;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--ws-border);
+    font-size: 12px;
+}
+.notification-preferences input {
+    justify-self: center;
+    accent-color: #0f766e;
+}
+.operation-list > article {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+    border-bottom: 1px solid var(--ws-border);
+}
+.operation-empty {
+    padding: 28px;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.8;
+}
+.workload-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    margin-top: 22px;
+}
+.workload-grid article {
+    border: 1px solid var(--ws-border);
+    border-radius: 10px;
+    padding: 18px;
+    display: grid;
+    gap: 10px;
+}
+.workload-grid b {
+    font-size: 12px;
+    font-weight: 650;
+}
+.workload-grid strong {
+    font-size: 21px;
+    font-weight: 650;
+}
+.workload-grid p {
+    font-size: 11px;
+    line-height: 1.7;
+    color: #64748b;
+}
+.incident-follow-up {
+    border-top: 1px solid var(--ws-border);
+    margin-top: 18px;
+    padding-top: 18px;
+}
+.incident-follow-up .business-form {
+    margin-top: 20px;
+}
+.resolution-photo-preview {
+    width: 90px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+.incident-history {
+    margin-top: 20px;
+}
+.incident-history summary {
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.incident-history > div {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--ws-border);
+}
+.incident-history b {
+    font-size: 11px;
+    font-weight: 600;
+}
+.incident-history p {
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    margin-top: 7px;
+}
+.monthly-report-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-block: 20px;
+    flex-wrap: wrap;
+}
+.monthly-report-controls .form-field {
+    flex: 1;
+    min-width: 150px;
+}
+@media (max-width: 900px) {
+    .workload-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 680px) {
+    .operation-settings {
+        padding: 20px;
+    }
+    .operation-list > article,
+    .notification-list > article {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 18px;
+    }
+    .workload-grid {
+        grid-template-columns: 1fr;
+    }
+    .notification-list .terrain-link {
+        margin-left: 21px;
+    }
+    .operation-list .operation-actions {
+        width: 100%;
+    }
+}

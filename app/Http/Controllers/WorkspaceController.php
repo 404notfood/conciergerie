@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Concierge\SubscriptionManager;
 use App\Actions\Concierge\NotifyActivity;
-use App\Models\MissionRecurrence;
-use App\Models\RecurrenceOccurrence;
-use App\Models\StaffAvailability;
+use App\Actions\Concierge\SubscriptionManager;
 use App\Actions\Concierge\WorkspaceAccess;
 use App\Models\Activity;
 use App\Models\Client;
@@ -16,8 +13,11 @@ use App\Models\InterventionRequest;
 use App\Models\Membership;
 use App\Models\Message;
 use App\Models\Mission;
+use App\Models\MissionRecurrence;
 use App\Models\Property;
+use App\Models\RecurrenceOccurrence;
 use App\Models\ServiceTemplate;
+use App\Models\StaffAvailability;
 use App\Models\Stay;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
@@ -41,6 +41,9 @@ class WorkspaceController extends Controller
         }
         $member = $this->access->membership($request);
         $tenant = $member->concierge_id;
+        if ($request->header('X-Inertia') && $request->header('X-Inertia-Partial-Component') === 'workspace/index' && $request->header('X-Inertia-Partial-Data') === 'notificationInbox') {
+            return Inertia::render('workspace/index', ['notificationInbox' => app(NotifyActivity::class)->inbox($tenant, $request->user()->id)]);
+        }
         $properties = Property::where('concierge_id', $tenant)->with('client');
         $missions = Mission::where('concierge_id', $tenant)->with(['property.client', 'assignee', 'reports.photos', 'reports.author', 'reports.reviewer']);
         $incidents = Incident::where('concierge_id', $tenant)->with(['mission.property', 'author']);
@@ -54,7 +57,7 @@ class WorkspaceController extends Controller
         if ($member->role === 'worker') {
             $missions->where('assigned_user_id', $request->user()->id);
             $properties->whereIn('id', Mission::where('concierge_id', $tenant)->where('assigned_user_id', $request->user()->id)->select('property_id'));
-            $incidents->where('author_id', $request->user()->id);
+            $incidents->where(fn ($query) => $query->where('author_id', $request->user()->id)->orWhere('responsible_user_id', $request->user()->id));
         }
         if ($member->role === 'client') {
             $properties->where('client_id', $member->client_id);
@@ -93,7 +96,11 @@ class WorkspaceController extends Controller
         }
 
         if ($member->role !== 'manager' && $member->role !== 'client') {
-            $incidentData->each(fn (Incident $incident) => $incident->makeHidden(['resolution_notes', 'resolution_photo_ids', 'resolved_by', 'responsible_user_id']));
+            $incidentData->each(function (Incident $incident) {
+                $incident->makeHidden(['resolution_notes', 'resolution_photo_ids', 'resolved_by', 'responsible_user_id']);
+                $incident->mission->setAttribute('instructions', null);
+                $incident->mission->property->setAttribute('instructions', null);
+            });
         }
         $availability = StaffAvailability::where('concierge_id', $tenant)->with('user:id,name');
         if ($member->role === 'worker') {
@@ -101,6 +108,7 @@ class WorkspaceController extends Controller
         } elseif ($member->role === 'coordinator') {
             $availability->whereIn('user_id', Membership::where('concierge_id', $tenant)->where('company', $member->company)->where('role', 'worker')->select('user_id'));
         }
+
         return Inertia::render('workspace/index', [
             'notificationInbox' => fn () => app(NotifyActivity::class)->inbox($tenant, $request->user()->id),
             'recurrences' => $member->role === 'manager' ? MissionRecurrence::where('concierge_id', $tenant)->with('property:id,name')->latest('id')->get() : [],

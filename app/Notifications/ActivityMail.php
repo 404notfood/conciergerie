@@ -17,7 +17,10 @@ class ActivityMail extends Notification implements ShouldQueue
 
     public int $tries = 3;
 
-    public function __construct(public int $activityId) {}
+    public function __construct(public int $activityId)
+    {
+        $this->onQueue('activity-mail');
+    }
 
     /** @return list<string> */
     public function via(User $notifiable): array

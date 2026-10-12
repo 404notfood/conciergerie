@@ -1,6 +1,14 @@
+import {
+    NotificationBell,
+    NotificationsPanel,
+    RecurrencesPanel,
+    AvailabilityPanel,
+    IncidentFollowUp,
+    MonthlyReportButton,
+    ReportPdfLink,
+} from '@/components/concierge/operations';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Bell,
     Building2,
     CalendarDays,
     Camera,
@@ -81,6 +89,9 @@ const viewNames: Record<string, string> = {
     properties: 'Lieux d’intervention',
     reports: 'Comptes rendus',
     incidents: 'Incidents',
+    notifications: 'Notifications',
+    recurrences: 'Récurrences',
+    availability: 'Disponibilités',
     requests: 'Demandes',
     messages: 'Messagerie',
     templates: 'Prestations',
@@ -335,8 +346,13 @@ export default function Workspace(props: WorkspaceProps) {
         (m) => m.id === selectedMissionId,
     );
     const currentReport = selectedMission?.reports[0];
-    const reportPhotos =
-        selectedMission?.reports.flatMap((r) => r.photos) ?? [];
+    const reportPhotos = [
+        ...(selectedMission?.reports.flatMap((r) => r.photos) ?? []),
+        ...(props.missions
+            .find((m) => m.id === selectedIncident?.repair_mission_id)
+            ?.reports.filter((r) => r.status === 'validated')
+            .flatMap((r) => r.photos) ?? []),
+    ];
     useEffect(() => {
         if (view === 'messages' && !isClient) {
             const timer = setInterval(
@@ -381,6 +397,9 @@ export default function Workspace(props: WorkspaceProps) {
         { key: 'overview', icon: Home },
         { key: 'missions', icon: ClipboardList },
         { key: 'planning', icon: CalendarDays },
+        { key: 'recurrences', icon: CalendarDays },
+        { key: 'availability', icon: Users },
+        { key: 'notifications', icon: FileCheck2 },
         { key: 'team', icon: Users },
         { key: 'clients', icon: Users },
         { key: 'properties', icon: House },
@@ -393,12 +412,18 @@ export default function Workspace(props: WorkspaceProps) {
         (item) =>
             isManager ||
             (!isClient &&
-                ['overview', 'missions', 'reports', 'incidents'].includes(
-                    item.key,
-                )) ||
+                [
+                    'overview',
+                    'missions',
+                    'reports',
+                    'incidents',
+                    'availability',
+                    'notifications',
+                ].includes(item.key)) ||
             (isClient &&
                 [
                     'overview',
+                    'notifications',
                     'properties',
                     'reports',
                     'incidents',
@@ -528,12 +553,10 @@ export default function Workspace(props: WorkspaceProps) {
                         {viewNames[view]}
                     </span>
                     <div>
-                        <Link
-                            href={dashboard({ query: { view: 'incidents' } })}
-                            aria-label="Consulter les incidents"
-                        >
-                            <Bell size={18} />
-                        </Link>
+                        <NotificationBell
+                            inbox={props.notificationInbox}
+                            identity={props.concierge.id + ':' + auth.user.id}
+                        />
                         <div className="user-avatar">
                             {initials(auth.user.name)}
                         </div>
@@ -586,7 +609,13 @@ export default function Workspace(props: WorkspaceProps) {
                                       ? 'Un échange direct avec votre conciergerie et vos clients.'
                                       : view === 'reports'
                                         ? 'Des preuves, un contrôle, puis un partage clair.'
-                                        : 'Retrouvez et organisez les informations de votre conciergerie.'}
+                                        : view === 'recurrences'
+                                          ? 'Préparez vos passages réguliers et confirmez chaque intervention.'
+                                          : view === 'availability'
+                                            ? 'Anticipez les absences et les conflits de planning.'
+                                            : view === 'notifications'
+                                              ? 'Suivez les actions attendues et choisissez vos alertes.'
+                                              : 'Retrouvez et organisez les informations de votre conciergerie.'}
                             </p>
                         </div>
                         <div className="workspace-toolbar">
@@ -1271,6 +1300,18 @@ export default function Workspace(props: WorkspaceProps) {
                             ))}
                         </div>
                     ) : null}
+                    {view === 'notifications' ? (
+                        <NotificationsPanel inbox={props.notificationInbox} />
+                    ) : null}
+                    {view === 'recurrences' && isManager ? (
+                        <RecurrencesPanel props={props} />
+                    ) : null}
+                    {view === 'availability' && !isClient ? (
+                        <AvailabilityPanel props={props} user={auth.user} />
+                    ) : null}
+                    {view === 'reports' && (isManager || isClient) ? (
+                        <MonthlyReportButton props={props} />
+                    ) : null}
                     {view === 'incidents' ? (
                         <div className="directory-grid">
                             {props.incidents.length ? (
@@ -1291,6 +1332,12 @@ export default function Workspace(props: WorkspaceProps) {
                                             {dateLabel(i.created_at, true)} ·{' '}
                                             {i.author.name}
                                         </p>
+                                        {isManager ? (
+                                            <IncidentFollowUp
+                                                incident={i}
+                                                props={props}
+                                            />
+                                        ) : null}
                                         {isManager ? (
                                             <button
                                                 className="brand-button small mt-4"
@@ -2016,6 +2063,10 @@ export default function Workspace(props: WorkspaceProps) {
                                     </div>
                                 </>
                             ) : null}
+                            {currentReport?.status === 'validated' &&
+                            (isManager || isClient) ? (
+                                <ReportPdfLink id={currentReport.id} />
+                            ) : null}
                             {currentReport ? (
                                 <>
                                     <div className="detail-block">
@@ -2289,16 +2340,10 @@ export default function Workspace(props: WorkspaceProps) {
                                 }
                                 required
                             />
-                            <SelectField
-                                label="État de l’incident"
+                            <input
+                                type="hidden"
                                 name="status"
-                                defaultValue={selectedIncident.status}
-                                required
-                                empty=""
-                                items={[
-                                    { value: 'open', label: 'À traiter' },
-                                    { value: 'resolved', label: 'Résolu' },
-                                ]}
+                                value={selectedIncident.status}
                             />
                             <div className="report-gallery">
                                 {reportPhotos.map((p) => (
