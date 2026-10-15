@@ -5,7 +5,7 @@ export function InertiaBrand({ compact = false }: { compact?: boolean }) {
 }
 export function Brand({
     compact = false,
-    name = import.meta.env.VITE_APP_NAME || 'Tout en Main',
+    name = import.meta.env.VITE_APP_NAME || 'ConcierPilot',
 }: {
     compact?: boolean;
     name?: string;

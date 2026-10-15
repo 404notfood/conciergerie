@@ -41,6 +41,16 @@ test('public content metadata and FAQ are present in the initial HTML without Ja
     $response->assertInertia(fn (Assert $inertia) => $inertia->component('marketing/content')->where('content.heading', $page->heading));
 });
 
+test('the ConcierPilot identity upgrade updates public metadata and preserves SEO preferences', function () {
+    SeoSetting::first()->update(['site_name' => 'Tout en Main', 'public_url' => 'https://conciergerie.test', 'indexing_enabled' => false, 'google_verification' => 'existing-google-token', 'contact_email' => 'contact@example.test']);
+    $migration = require database_path('migrations/2026_10_15_120245_update_public_identity_to_concierpilot.php');
+
+    $migration->up();
+
+    $this->get('/')->assertOk()->assertSee('ConcierPilot')->assertSee('href="https://concierpilot.fr/"', false);
+    $this->assertDatabaseHas('seo_settings', ['id' => 1, 'site_name' => 'ConcierPilot', 'public_url' => 'https://concierpilot.fr', 'indexing_enabled' => false, 'google_verification' => 'existing-google-token', 'contact_email' => 'contact@example.test']);
+});
+
 test('blank admin identity settings fall back to APP_NAME and APP_URL configuration', function () {
     config(['app.name' => 'Mon Application', 'app.url' => 'https://future-domaine.fr']);
     $response = $this->get('/')->assertOk()->assertSee('Mon Application')->assertSee('https://future-domaine.fr/');
