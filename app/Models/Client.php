@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $email
  * @property string|null $phone
  * @property string $kind
+ * @property Carbon|null $archived_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
@@ -23,4 +24,9 @@ class Client extends Model
 {
     /** @use HasFactory<ClientFactory> */
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return ['archived_at' => 'datetime'];
+    }
 }

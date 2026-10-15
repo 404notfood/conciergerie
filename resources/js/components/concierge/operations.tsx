@@ -289,19 +289,23 @@ export function RecurrencesPanel({ props }: { props: WorkspaceProps }) {
                                 label="Lieu"
                                 name="property_id"
                                 required
-                                items={props.properties.map((p) => ({
-                                    value: p.id,
-                                    label: p.name,
-                                }))}
+                                items={props.properties
+                                    .filter((p) => !p.archived_at)
+                                    .map((p) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                    }))}
                             />
                             <SelectField
                                 label="Modèle de prestation"
                                 name="template_id"
                                 required
-                                items={props.templates.map((p) => ({
-                                    value: p.id,
-                                    label: p.name,
-                                }))}
+                                items={props.templates
+                                    .filter((t) => !t.archived_at)
+                                    .map((p) => ({
+                                        value: p.id,
+                                        label: p.name,
+                                    }))}
                             />
                         </div>
                         <SelectField
@@ -830,10 +834,12 @@ export function IncidentFollowUp({
                         label="Modèle de correction"
                         name="template_id"
                         required
-                        items={props.templates.map((t) => ({
-                            value: t.id,
-                            label: t.name,
-                        }))}
+                        items={props.templates
+                            .filter((t) => !t.archived_at)
+                            .map((t) => ({
+                                value: t.id,
+                                label: t.name,
+                            }))}
                     />
                     <SelectField
                         label="Intervenant"

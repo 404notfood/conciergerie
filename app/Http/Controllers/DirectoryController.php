@@ -31,7 +31,7 @@ class DirectoryController extends Controller
     public function property(Request $request): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['client_id' => ['required', Rule::exists('clients', 'id')->where('concierge_id', $member->concierge_id)], 'name' => ['required', 'string', 'max:120'], 'address' => ['required', 'string', 'max:255'], 'kind' => ['required', Rule::in(['rental', 'residence', 'business', 'other'])], 'instructions' => ['nullable', 'string', 'max:5000'], 'access_code' => ['nullable', 'string', 'max:500'], 'offline_access' => ['boolean']]);
+        $data = $request->validate(['client_id' => ['required', Rule::exists('clients', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'name' => ['required', 'string', 'max:120'], 'address' => ['required', 'string', 'max:255'], 'kind' => ['required', Rule::in(['rental', 'residence', 'business', 'other'])], 'instructions' => ['nullable', 'string', 'max:5000'], 'access_code' => ['nullable', 'string', 'max:500'], 'offline_access' => ['boolean']]);
         if ($data['offline_access'] ?? false) {
             $this->quotas->feature($request, 'offline');
         }
@@ -43,7 +43,7 @@ class DirectoryController extends Controller
     public function member(Request $request): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'email' => ['required', 'email', 'max:255', 'unique:users,email'], 'password' => ['required', 'string', 'min:12', 'confirmed'], 'role' => ['required', Rule::in(['manager', 'worker', 'client', 'coordinator'])], 'client_id' => ['nullable', 'required_if:role,client', Rule::exists('clients', 'id')->where('concierge_id', $member->concierge_id)], 'team' => ['nullable', 'string', 'max:120'], 'company' => ['nullable', 'required_if:role,coordinator', 'string', 'max:120']]);
+        $data = $request->validate(['name' => ['required', 'string', 'max:120'], 'email' => ['required', 'email', 'max:255', 'unique:users,email'], 'password' => ['required', 'string', 'min:12', 'confirmed'], 'role' => ['required', Rule::in(['manager', 'worker', 'client', 'coordinator'])], 'client_id' => ['nullable', 'required_if:role,client', Rule::exists('clients', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'team' => ['nullable', 'string', 'max:120'], 'company' => ['nullable', 'required_if:role,coordinator', 'string', 'max:120']]);
         if ($data['role'] === 'client') {
             $this->quotas->feature($request, 'client_portal');
         }
@@ -73,7 +73,7 @@ class DirectoryController extends Controller
     public function stay(Request $request): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)], 'title' => ['required', 'string', 'max:120'], 'starts_on' => ['required', 'date'], 'ends_on' => ['required', 'date', 'after:starts_on'], 'kind' => ['required', Rule::in(['stay', 'blocked'])]]);
+        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'title' => ['required', 'string', 'max:120'], 'starts_on' => ['required', 'date'], 'ends_on' => ['required', 'date', 'after:starts_on'], 'kind' => ['required', Rule::in(['stay', 'blocked'])]]);
         Stay::create([...$data, 'concierge_id' => $member->concierge_id]);
 
         return back()->with('success', 'Période ajoutée au planning.');
@@ -82,7 +82,7 @@ class DirectoryController extends Controller
     public function import(Request $request, ImportCalendar $import): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)], 'source' => ['required', Rule::in(['airbnb', 'booking', 'ical'])], 'calendar' => ['required', 'file', 'max:2048']]);
+        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'source' => ['required', Rule::in(['airbnb', 'booking', 'ical'])], 'calendar' => ['required', 'file', 'max:2048']]);
         $this->quotas->feature($request, 'calendar_import');
         $count = $import->handle($member->concierge_id, (int) $data['property_id'], $data['source'], $request->file('calendar')->getContent());
 

@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MissionController extends Controller
@@ -31,7 +32,7 @@ class MissionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)], 'assigned_company' => ['nullable', 'string', 'max:120', Rule::exists('memberships', 'company')->where('concierge_id', $member->concierge_id)->where('role', 'coordinator')], 'assigned_user_id' => ['nullable', Rule::prohibitedIf($request->filled('assigned_company')), Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)], 'title' => ['required', 'string', 'max:120'], 'kind' => ['required', Rule::in(['service', 'initial', 'arrival', 'departure'])], 'scheduled_at' => ['required', 'date'], 'duration' => ['required', 'integer', 'min:5', 'max:1440'], 'instructions' => ['nullable', 'string', 'max:5000']]);
+        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'assigned_company' => ['nullable', 'string', 'max:120', Rule::exists('memberships', 'company')->where('concierge_id', $member->concierge_id)->where('role', 'coordinator')], 'assigned_user_id' => ['nullable', Rule::prohibitedIf($request->filled('assigned_company')), Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'title' => ['required', 'string', 'max:120'], 'kind' => ['required', Rule::in(['service', 'initial', 'arrival', 'departure'])], 'scheduled_at' => ['required', 'date'], 'duration' => ['required', 'integer', 'min:5', 'max:1440'], 'instructions' => ['nullable', 'string', 'max:5000']]);
         if ($data['assigned_company'] ?? false) {
             $this->quotas->feature($request, 'subcontracting');
         }
@@ -46,6 +47,40 @@ class MissionController extends Controller
         });
 
         return back()->with('success', 'Mission planifiée.');
+    }
+
+    public function reschedule(Request $request, int $mission): RedirectResponse
+    {
+        $member = $this->access->manager($request);
+        $data = $request->validate([
+            'version' => ['required', 'integer'],
+            'scheduled_at' => ['required', 'date'],
+            'duration' => ['required', 'integer', 'min:5', 'max:1440'],
+            'assigned_user_id' => ['nullable', 'integer', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])],
+        ]);
+        DB::transaction(function () use ($request, $member, $mission, $data) {
+            Concierge::whereKey($member->concierge_id)->lockForUpdate()->firstOrFail();
+            $record = Mission::where('concierge_id', $member->concierge_id)->lockForUpdate()->findOrFail($mission);
+            abort_unless($record->version === (int) $data['version'], 409, 'La mission a changé. Actualisez la page.');
+            if (! in_array($record->status, ['planned', 'accepted'], true)) {
+                throw ValidationException::withMessages(['mission' => 'Seule une mission planifiée ou acceptée peut être déplacée.']);
+            }
+            if ($record->assigned_company && empty($data['assigned_user_id'])) {
+                throw ValidationException::withMessages(['assigned_user_id' => 'Choisissez un intervenant pour reprendre cette mission prestataire.']);
+            }
+            $start = Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc();
+            $userId = isset($data['assigned_user_id']) ? (int) $data['assigned_user_id'] : null;
+            $this->schedule->check($member->concierge_id, $userId, $start, (int) $data['duration'], $record->id);
+            $previousUser = $record->assigned_user_id;
+            $record->update(['scheduled_at' => $start, 'duration' => $data['duration'], 'assigned_user_id' => $userId, 'assigned_company' => null, 'status' => 'planned', 'version' => $record->version + 1]);
+            $this->notifications->assigned($record, $request->user()->id);
+            if ($previousUser && $previousUser !== $userId) {
+                $this->notifications->send($member->concierge_id, Membership::where('concierge_id', $member->concierge_id)->where('user_id', $previousUser)->get(), 'mission_response', 'reschedule:'.$record->id.':'.$record->version, 'Une mission qui vous était affectée a été réorganisée.', 'missions', $request->user()->id);
+            }
+            $this->access->log($request, 'Mission replanifiée : '.$record->title, $record->id);
+        });
+
+        return back()->with('success', 'Mission replanifiée. Une nouvelle acceptation est nécessaire.');
     }
 
     public function transition(Request $request, int $mission): RedirectResponse

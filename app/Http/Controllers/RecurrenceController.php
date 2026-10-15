@@ -24,7 +24,7 @@ class RecurrenceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)], 'assigned_user_id' => ['nullable', 'integer', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'title' => ['required', 'string', 'max:120'], 'kind' => ['required', Rule::in(['service', 'initial', 'arrival', 'departure'])], 'frequency' => ['required', Rule::in(['daily', 'weekly', 'monthly'])], 'interval' => ['required', 'integer', 'min:1', 'max:12'], 'starts_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now('Europe/Paris')->toDateString()], 'ends_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:starts_on'], 'time' => ['required', 'date_format:H:i'], 'duration' => ['required', 'integer', 'min:5', 'max:1440'], 'instructions' => ['nullable', 'string', 'max:5000']]);
+        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'assigned_user_id' => ['nullable', 'integer', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'title' => ['required', 'string', 'max:120'], 'kind' => ['required', Rule::in(['service', 'initial', 'arrival', 'departure'])], 'frequency' => ['required', Rule::in(['daily', 'weekly', 'monthly'])], 'interval' => ['required', 'integer', 'min:1', 'max:12'], 'starts_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.now('Europe/Paris')->toDateString()], 'ends_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:starts_on'], 'time' => ['required', 'date_format:H:i'], 'duration' => ['required', 'integer', 'min:5', 'max:1440'], 'instructions' => ['nullable', 'string', 'max:5000']]);
         DB::transaction(function () use ($request, $member, $data) {
             Concierge::whereKey($this->access->membership($request)->concierge_id)->lockForUpdate()->firstOrFail();
             MissionRecurrence::create([...$data, 'concierge_id' => $member->concierge_id, 'next_on' => $data['starts_on']]);
@@ -43,6 +43,9 @@ class RecurrenceController extends Controller
             Concierge::whereKey($this->access->membership($request)->concierge_id)->lockForUpdate()->firstOrFail();
             Concierge::whereKey($member->concierge_id)->lockForUpdate()->firstOrFail();
             $rule = MissionRecurrence::where('concierge_id', $member->concierge_id)->lockForUpdate()->findOrFail($recurrence);
+            if ($data['is_active']) {
+                abort_unless(! $rule->property->archived_at && ! $rule->template->archived_at, 409, 'Restaurez le lieu et la prestation avant de reprendre cette récurrence.');
+            }
             $rule->update($data);
             $this->access->log($request, ($data['is_active'] ? 'Récurrence reprise : ' : 'Récurrence suspendue : ').$rule->title);
         });
@@ -71,6 +74,7 @@ class RecurrenceController extends Controller
             $mission = null;
             if ($data['decision'] === 'confirmed') {
                 abort_unless($record->recurrence->is_active, 409, 'Cette récurrence est suspendue.');
+                abort_unless(! $record->recurrence->property->archived_at && ! $record->recurrence->template->archived_at, 409, 'Le lieu ou la prestation est archivé.');
                 $snapshot = $record->snapshot;
                 $this->schedule->check($member->concierge_id, $snapshot['assigned_user_id'], Carbon::parse($snapshot['scheduled_at']), $snapshot['duration']);
                 $mission = Mission::create([...$snapshot, 'concierge_id' => $member->concierge_id]);

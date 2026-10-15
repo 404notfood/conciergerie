@@ -7,6 +7,15 @@ import {
     MonthlyReportButton,
     ReportPdfLink,
 } from '@/components/concierge/operations';
+import { ActionCenter } from '@/components/concierge/action-center';
+import {
+    ArchiveFilter,
+    DirectoryActions,
+} from '@/components/concierge/directory-management';
+import {
+    RescheduleMissionButton,
+    TeamPlanning,
+} from '@/components/concierge/team-planning';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     Building2,
@@ -333,6 +342,19 @@ export default function Workspace(props: WorkspaceProps) {
         useState<IncidentRecord | null>(null);
     const [selectedRequest, setSelectedRequest] =
         useState<RequestRecord | null>(null);
+    const [showArchived, setShowArchived] = useState(false);
+    const visibleClients = props.clients.filter(
+        (record) => showArchived || !record.archived_at,
+    );
+    const visibleProperties = props.properties.filter(
+        (record) => showArchived || !record.archived_at,
+    );
+    const visibleTemplates = props.templates.filter(
+        (record) => showArchived || !record.archived_at,
+    );
+    const visibleStays = props.stays.filter(
+        (record) => showArchived || !record.archived_at,
+    );
     const [search, setSearch] = useState('');
     const [selectedDay, setSelectedDay] = useState(() => localDay(new Date()));
     const [contact, setContact] = useState<number | null>(
@@ -431,24 +453,30 @@ export default function Workspace(props: WorkspaceProps) {
                     'messages',
                 ].includes(item.key)),
     );
-    const propertyOptions = props.properties.map((p) => ({
-        value: p.id,
-        label: p.name,
-    }));
+    const propertyOptions = props.properties
+        .filter((p) => !p.archived_at)
+        .map((p) => ({
+            value: p.id,
+            label: p.name,
+        }));
     const assigneeOptions = props.members
         .filter((m) => m.role === 'manager' || m.role === 'worker')
         .map((m) => ({
             value: m.user_id,
             label: m.user.name + (m.company ? ' · ' + m.company : ''),
         }));
-    const templateOptions = props.templates.map((t) => ({
-        value: t.id,
-        label: t.name,
-    }));
-    const clientOptions = props.clients.map((c) => ({
-        value: c.id,
-        label: c.name,
-    }));
+    const templateOptions = props.templates
+        .filter((t) => !t.archived_at)
+        .map((t) => ({
+            value: t.id,
+            label: t.name,
+        }));
+    const clientOptions = props.clients
+        .filter((c) => !c.archived_at)
+        .map((c) => ({
+            value: c.id,
+            label: c.name,
+        }));
     const newAction: Record<string, { label: string; modal: string }> = {
         missions: { label: 'Nouvelle mission', modal: 'new-mission' },
         planning: { label: 'Nouvelle période', modal: 'new-stay' },
@@ -660,6 +688,21 @@ export default function Workspace(props: WorkspaceProps) {
                             </button>
                         </div>
                     </div>
+                    {isManager &&
+                    ['clients', 'properties', 'templates', 'planning'].includes(
+                        view,
+                    ) ? (
+                        <ArchiveFilter
+                            archived={showArchived}
+                            onChange={setShowArchived}
+                        />
+                    ) : null}
+                    {view === 'overview' && isManager ? (
+                        <ActionCenter props={props} onMission={showMission} />
+                    ) : null}
+                    {view === 'planning' && isManager ? (
+                        <TeamPlanning props={props} onMission={showMission} />
+                    ) : null}
                     {view === 'overview' ? (
                         <>
                             <div className="stat-grid">
@@ -1066,8 +1109,8 @@ export default function Workspace(props: WorkspaceProps) {
                                             Importer iCal →
                                         </button>
                                     </div>
-                                    {props.stays.length ? (
-                                        props.stays.map((s) => (
+                                    {visibleStays.length ? (
+                                        visibleStays.map((s) => (
                                             <div
                                                 className="activity-item"
                                                 key={s.id}
@@ -1077,6 +1120,10 @@ export default function Workspace(props: WorkspaceProps) {
                                                 </span>
                                                 <div>
                                                     <b>{s.title}</b>
+                                                    <DirectoryActions
+                                                        resource="stays"
+                                                        record={s}
+                                                    />
                                                     <p>
                                                         {s.property.name} ·{' '}
                                                         {dateLabel(s.starts_on)}{' '}
@@ -1122,8 +1169,8 @@ export default function Workspace(props: WorkspaceProps) {
                     ) : null}
                     {view === 'clients' && isManager ? (
                         <div className="directory-grid">
-                            {props.clients.length ? (
-                                props.clients.map((c) => (
+                            {visibleClients.length ? (
+                                visibleClients.map((c) => (
                                     <article
                                         className="workspace-card directory-card"
                                         key={c.id}
@@ -1132,6 +1179,10 @@ export default function Workspace(props: WorkspaceProps) {
                                             <Users size={22} />
                                         </span>
                                         <h2>{c.name}</h2>
+                                        <DirectoryActions
+                                            resource="clients"
+                                            record={c}
+                                        />
                                         <p>
                                             {c.email}
                                             <br />
@@ -1182,8 +1233,8 @@ export default function Workspace(props: WorkspaceProps) {
                     ) : null}
                     {view === 'properties' ? (
                         <div className="directory-grid">
-                            {props.properties.length ? (
-                                props.properties.map((p) => (
+                            {visibleProperties.length ? (
+                                visibleProperties.map((p) => (
                                     <article
                                         className="workspace-card directory-card"
                                         key={p.id}
@@ -1196,6 +1247,12 @@ export default function Workspace(props: WorkspaceProps) {
                                             )}
                                         </span>
                                         <h2>{p.name}</h2>
+                                        {isManager ? (
+                                            <DirectoryActions
+                                                resource="properties"
+                                                record={p}
+                                            />
+                                        ) : null}
                                         <p>{p.address}</p>
                                         <p className="mt-3">{p.client?.name}</p>
                                         <span className="status-chip green">
@@ -1271,7 +1328,7 @@ export default function Workspace(props: WorkspaceProps) {
                     ) : null}
                     {view === 'templates' && isManager ? (
                         <div className="directory-grid">
-                            {props.templates.map((t) => (
+                            {visibleTemplates.map((t) => (
                                 <article
                                     className="workspace-card directory-card"
                                     key={t.id}
@@ -1280,6 +1337,10 @@ export default function Workspace(props: WorkspaceProps) {
                                         <ClipboardList size={22} />
                                     </span>
                                     <h2>{t.name}</h2>
+                                    <DirectoryActions
+                                        resource="templates"
+                                        record={t}
+                                    />
                                     {t.checklist.map((item, i) => (
                                         <p
                                             className="flex items-start gap-2"
@@ -1323,7 +1384,12 @@ export default function Workspace(props: WorkspaceProps) {
                                         <span className="directory-icon">
                                             <TriangleAlert size={22} />
                                         </span>
-                                        <h2>{i.mission.property.name}</h2>
+                                        <h2
+                                            id={`incident-${i.id}`}
+                                            className="scroll-mt-6"
+                                        >
+                                            {i.mission.property.name}
+                                        </h2>
                                         <Status status={i.status} />
                                         <p className="mt-3 whitespace-pre-wrap">
                                             {i.description}
@@ -1610,7 +1676,7 @@ export default function Workspace(props: WorkspaceProps) {
                         </BusinessForm>
                     ) : null}
                     {modal === 'new-property' ? (
-                        props.clients.length ? (
+                        clientOptions.length ? (
                             <BusinessForm
                                 action={propertyRoutes.store.url()}
                                 onSuccess={close}
@@ -1774,7 +1840,7 @@ export default function Workspace(props: WorkspaceProps) {
                         </BusinessForm>
                     ) : null}
                     {modal === 'new-mission' ? (
-                        props.properties.length ? (
+                        propertyOptions.length ? (
                             <BusinessForm
                                 action={missionRoutes.store.url()}
                                 onSuccess={close}
@@ -1989,6 +2055,10 @@ export default function Workspace(props: WorkspaceProps) {
                     {modal === 'mission-detail' && selectedMission ? (
                         <>
                             <Status status={selectedMission.status} />
+                            <RescheduleMissionButton
+                                mission={selectedMission}
+                                props={props}
+                            />
                             {props.membership.role === 'coordinator' &&
                             selectedMission.status === 'planned' ? (
                                 <button

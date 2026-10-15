@@ -44,7 +44,7 @@ class IncidentWorkflowController extends Controller
     public function repair(Request $request, int $incident): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['version' => ['required', 'integer'], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)], 'assigned_user_id' => ['nullable', 'integer', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'scheduled_at' => ['required', 'date'], 'duration' => ['required', 'integer', 'min:5', 'max:1440']]);
+        $data = $request->validate(['version' => ['required', 'integer'], 'template_id' => ['required', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'assigned_user_id' => ['nullable', 'integer', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])], 'scheduled_at' => ['required', 'date'], 'duration' => ['required', 'integer', 'min:5', 'max:1440']]);
         $this->quotas->mutate($request, ['missions_month' => 1], function () use ($request, $incident, $member, $data) {
             $record = Incident::where('concierge_id', $member->concierge_id)->lockForUpdate()->findOrFail($incident);
             abort_unless($record->version === (int) $data['version'] && $record->status !== 'resolved', 409, 'Ce dossier a changé ou est déjà clos.');

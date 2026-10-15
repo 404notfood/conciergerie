@@ -1,10 +1,16 @@
 <?php
 
 use App\Http\Controllers\AdministrationController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\ClientPortalController;
+use App\Http\Controllers\ClientReportController;
 use App\Http\Controllers\DirectoryController;
+use App\Http\Controllers\DirectoryManagementController;
+use App\Http\Controllers\IncidentWorkflowController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\MissionController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RecurrenceController;
 use App\Http\Controllers\SeoAdministrationController;
 use App\Http\Controllers\TerrainController;
 use App\Http\Controllers\WorkspaceController;
@@ -20,21 +26,24 @@ Route::get('/robots.txt', [MarketingController::class, 'robots'])->name('marketi
 Route::get('/sitemap.xml', [MarketingController::class, 'sitemap'])->name('marketing.sitemap');
 Route::get('/llms.txt', [MarketingController::class, 'llms'])->name('marketing.llms');
 Route::middleware(['auth', 'verified', EnsureSubscription::class])->group(function () {
-    Route::post('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.read-all');
-    Route::post('/notifications/preferences', [\App\Http\Controllers\NotificationController::class, 'preferences'])->name('notifications.preferences');
-    Route::post('/recurrences', [\App\Http\Controllers\RecurrenceController::class, 'store'])->name('recurrences.store');
-    Route::post('/recurrences/generate', [\App\Http\Controllers\RecurrenceController::class, 'generate'])->name('recurrences.generate');
-    Route::post('/recurrences/{recurrence}/toggle', [\App\Http\Controllers\RecurrenceController::class, 'toggle'])->name('recurrences.toggle');
-    Route::post('/occurrences/{occurrence}/decision', [\App\Http\Controllers\RecurrenceController::class, 'decide'])->name('occurrences.decide');
-    Route::post('/availabilities', [\App\Http\Controllers\AvailabilityController::class, 'store'])->name('availabilities.store');
-    Route::delete('/availabilities/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'destroy'])->name('availabilities.destroy');
-    Route::post('/incidents/{incident}/follow-up', [\App\Http\Controllers\IncidentWorkflowController::class, 'update'])->name('incidents.follow-up');
-    Route::post('/incidents/{incident}/repair', [\App\Http\Controllers\IncidentWorkflowController::class, 'repair'])->name('incidents.repair');
-    Route::post('/incidents/{incident}/resolve', [\App\Http\Controllers\IncidentWorkflowController::class, 'resolve'])->name('incidents.resolve');
-    Route::post('/incidents/{incident}/reopen', [\App\Http\Controllers\IncidentWorkflowController::class, 'reopen'])->name('incidents.reopen');
-    Route::get('/reports/{report}/pdf', [\App\Http\Controllers\ClientReportController::class, 'report'])->name('reports.pdf');
-    Route::get('/clients/{client}/bilans/{month}/pdf', [\App\Http\Controllers\ClientReportController::class, 'monthly'])->where('month', '[0-9]{4}-[0-9]{2}')->name('clients.bilan');
+    Route::post('/directory/{resource}/{record}/update', [DirectoryManagementController::class, 'update'])->whereIn('resource', ['clients', 'properties', 'templates', 'stays'])->name('directory.update');
+    Route::post('/directory/{resource}/{record}/archive', [DirectoryManagementController::class, 'archive'])->whereIn('resource', ['clients', 'properties', 'templates', 'stays'])->name('directory.archive');
+    Route::post('/missions/{mission}/reschedule', [MissionController::class, 'reschedule'])->name('missions.reschedule');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('/notifications/preferences', [NotificationController::class, 'preferences'])->name('notifications.preferences');
+    Route::post('/recurrences', [RecurrenceController::class, 'store'])->name('recurrences.store');
+    Route::post('/recurrences/generate', [RecurrenceController::class, 'generate'])->name('recurrences.generate');
+    Route::post('/recurrences/{recurrence}/toggle', [RecurrenceController::class, 'toggle'])->name('recurrences.toggle');
+    Route::post('/occurrences/{occurrence}/decision', [RecurrenceController::class, 'decide'])->name('occurrences.decide');
+    Route::post('/availabilities', [AvailabilityController::class, 'store'])->name('availabilities.store');
+    Route::delete('/availabilities/{availability}', [AvailabilityController::class, 'destroy'])->name('availabilities.destroy');
+    Route::post('/incidents/{incident}/follow-up', [IncidentWorkflowController::class, 'update'])->name('incidents.follow-up');
+    Route::post('/incidents/{incident}/repair', [IncidentWorkflowController::class, 'repair'])->name('incidents.repair');
+    Route::post('/incidents/{incident}/resolve', [IncidentWorkflowController::class, 'resolve'])->name('incidents.resolve');
+    Route::post('/incidents/{incident}/reopen', [IncidentWorkflowController::class, 'reopen'])->name('incidents.reopen');
+    Route::get('/reports/{report}/pdf', [ClientReportController::class, 'report'])->name('reports.pdf');
+    Route::get('/clients/{client}/bilans/{month}/pdf', [ClientReportController::class, 'monthly'])->where('month', '[0-9]{4}-[0-9]{2}')->name('clients.bilan');
     Route::get('/dashboard', [WorkspaceController::class, 'index'])->name('dashboard');
     Route::post('/workspace', [WorkspaceController::class, 'store'])->name('workspace.store');
     Route::post('/workspace/switch', [WorkspaceController::class, 'switch'])->name('workspace.switch');
@@ -57,7 +66,7 @@ Route::middleware(['auth', 'verified', EnsureSubscription::class])->group(functi
     Route::post('/requests/{interventionRequest}/decision', [ClientPortalController::class, 'decide'])->name('requests.decide');
     Route::get('/terrain-data', [TerrainController::class, 'data'])->name('terrain.data');
 });
-Route::middleware(['auth', 'verified'])->get('/notifications/{notification}/open', [\App\Http\Controllers\NotificationController::class, 'open'])->name('notifications.open');
+Route::middleware(['auth', 'verified'])->get('/notifications/{notification}/open', [NotificationController::class, 'open'])->name('notifications.open');
 Route::middleware(['auth', 'verified'])->get('/abonnement', [WorkspaceController::class, 'subscription'])->name('subscription.show');
 Route::middleware(['auth', 'verified', EnsureAppAdmin::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdministrationController::class, 'index'])->name('index');

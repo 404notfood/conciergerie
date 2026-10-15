@@ -11,6 +11,7 @@ export type Member = {
     concierge?: { id: number; name: string };
 };
 export type ClientRecord = {
+    archived_at: string | null;
     id: number;
     name: string;
     email: string;
@@ -18,6 +19,8 @@ export type ClientRecord = {
     kind: string;
 };
 export type PropertyRecord = {
+    archived_at: string | null;
+    offline_access: boolean;
     id: number;
     client_id: number;
     name: string;
@@ -94,8 +97,14 @@ export type RequestRecord = {
     author: Person;
     created_at: string;
 };
-export type TemplateRecord = { id: number; name: string; checklist: string[] };
+export type TemplateRecord = {
+    id: number;
+    name: string;
+    checklist: string[];
+    archived_at: string | null;
+};
 export type StayRecord = {
+    archived_at: string | null;
     id: number;
     title: string;
     starts_on: string;
@@ -119,6 +128,14 @@ export type ActivityRecord = {
     created_at: string;
 };
 export type WorkspaceProps = {
+    actionCenter: Record<
+        | 'urgent_incidents'
+        | 'late_missions'
+        | 'unassigned_missions'
+        | 'pending_missions'
+        | 'reports',
+        number[]
+    > | null;
     notificationInbox: import('./operations').NotificationInbox;
     recurrences: import('./operations').Recurrence[];
     occurrences: import('./operations').Occurrence[];

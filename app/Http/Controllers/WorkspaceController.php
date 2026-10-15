@@ -110,6 +110,13 @@ class WorkspaceController extends Controller
         }
 
         return Inertia::render('workspace/index', [
+            'actionCenter' => $member->role === 'manager' ? [
+                'urgent_incidents' => $incidentData->filter(fn (Incident $incident) => $incident->status !== 'resolved' && in_array($incident->priority, ['high', 'urgent'], true))->pluck('id')->values()->all(),
+                'late_missions' => $missionData->filter(fn (Mission $mission) => in_array($mission->status, ['planned', 'accepted'], true) && $mission->scheduled_at->lt(now()))->pluck('id')->values()->all(),
+                'unassigned_missions' => $missionData->filter(fn (Mission $mission) => $mission->status === 'planned' && ! $mission->assigned_user_id && ! $mission->assigned_company && $mission->scheduled_at->lte(now()->addDay()))->pluck('id')->values()->all(),
+                'pending_missions' => $missionData->filter(fn (Mission $mission) => $mission->status === 'planned' && ($mission->assigned_user_id || $mission->assigned_company) && $mission->scheduled_at->lte(now()->addDay()))->pluck('id')->values()->all(),
+                'reports' => $missionData->where('status', 'submitted')->pluck('id')->values()->all(),
+            ] : null,
             'notificationInbox' => fn () => app(NotifyActivity::class)->inbox($tenant, $request->user()->id),
             'recurrences' => $member->role === 'manager' ? MissionRecurrence::where('concierge_id', $tenant)->with('property:id,name')->latest('id')->get() : [],
             'occurrences' => $member->role === 'manager' ? RecurrenceOccurrence::where('concierge_id', $tenant)->where('status', 'pending')->with('recurrence:id,title,is_active')->orderBy('scheduled_on')->limit(200)->get() : [],

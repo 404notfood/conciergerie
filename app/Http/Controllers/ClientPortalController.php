@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Concierge;
-
+use App\Actions\Concierge\NotifyActivity;
 use App\Actions\Concierge\QuotaGate;
 use App\Actions\Concierge\ScheduleGuard;
-use App\Actions\Concierge\NotifyActivity;
-use App\Models\Membership;
 use App\Actions\Concierge\WorkspaceAccess;
+use App\Models\Concierge;
 use App\Models\InterventionRequest;
+use App\Models\Membership;
 use App\Models\Message;
 use App\Models\Mission;
 use App\Models\ServiceTemplate;
@@ -28,7 +27,7 @@ class ClientPortalController extends Controller
         $member = $this->access->membership($request);
         abort_unless(in_array($member->role, ['manager', 'client'], true), 403);
         $this->quotas->feature($request, 'messaging');
-        $data = $request->validate(['client_id' => ['required', Rule::exists('clients', 'id')->where('concierge_id', $member->concierge_id)], 'body' => ['required', 'string', 'max:5000']]);
+        $data = $request->validate(['client_id' => ['required', Rule::exists('clients', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'body' => ['required', 'string', 'max:5000']]);
         if ($member->role === 'client') {
             abort_unless((int) $data['client_id'] === $member->client_id, 404);
         }
@@ -45,7 +44,7 @@ class ClientPortalController extends Controller
         $member = $this->access->membership($request);
         abort_unless($member->role === 'client', 403);
         $this->quotas->feature($request, 'client_portal');
-        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)->where('client_id', $member->client_id)], 'title' => ['required', 'string', 'max:120'], 'description' => ['required', 'string', 'max:5000']]);
+        $data = $request->validate(['property_id' => ['required', Rule::exists('properties', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')->where('client_id', $member->client_id)], 'title' => ['required', 'string', 'max:120'], 'description' => ['required', 'string', 'max:5000']]);
         DB::transaction(function () use ($request, $member, $data) {
             Concierge::whereKey($this->access->membership($request)->concierge_id)->lockForUpdate()->firstOrFail();
             $record = InterventionRequest::create([...$data, 'concierge_id' => $member->concierge_id, 'author_id' => $request->user()->id]);
@@ -59,7 +58,7 @@ class ClientPortalController extends Controller
     public function decide(Request $request, int $interventionRequest): RedirectResponse
     {
         $member = $this->access->manager($request);
-        $data = $request->validate(['decision' => ['required', 'in:accepted,rejected'], 'feedback' => ['required', 'string', 'max:3000'], 'scheduled_at' => ['nullable', 'required_if:decision,accepted', 'date'], 'template_id' => ['nullable', 'required_if:decision,accepted', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)], 'assigned_user_id' => ['nullable', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])]]);
+        $data = $request->validate(['decision' => ['required', 'in:accepted,rejected'], 'feedback' => ['required', 'string', 'max:3000'], 'scheduled_at' => ['nullable', 'required_if:decision,accepted', 'date'], 'template_id' => ['nullable', 'required_if:decision,accepted', Rule::exists('service_templates', 'id')->where('concierge_id', $member->concierge_id)->whereNull('archived_at')], 'assigned_user_id' => ['nullable', Rule::exists('memberships', 'user_id')->where('concierge_id', $member->concierge_id)->whereIn('role', ['manager', 'worker'])]]);
         DB::transaction(function () use ($request, $interventionRequest, $member, $data) {
             Concierge::whereKey($this->access->membership($request)->concierge_id)->lockForUpdate()->firstOrFail();
             $record = InterventionRequest::where('concierge_id', $member->concierge_id)->lockForUpdate()->findOrFail($interventionRequest);
@@ -72,6 +71,7 @@ class ClientPortalController extends Controller
                     app(ScheduleGuard::class)->check($member->concierge_id, $data['assigned_user_id'] ?? null, $start, 60);
                     $mission = Mission::create(['concierge_id' => $member->concierge_id, 'property_id' => $record->property_id, 'assigned_user_id' => $data['assigned_user_id'] ?? null, 'title' => $record->title, 'scheduled_at' => Carbon::parse($data['scheduled_at'], 'Europe/Paris')->utc(), 'instructions' => $record->description, 'checklist' => $template->checklist]);
                     app(NotifyActivity::class)->assigned($mission, $request->user()->id);
+
                     return $mission;
                 });
                 $missionId = $mission->id;

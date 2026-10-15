@@ -22,7 +22,7 @@ class PrepareRecurringMissions
                 $count += DB::transaction(function () use ($candidate, $until, $tenant) {
                     Concierge::whereKey($tenant)->lockForUpdate()->firstOrFail();
                     $rule = MissionRecurrence::whereKey($candidate->id)->lockForUpdate()->firstOrFail();
-                    if (! $rule->is_active || ! $this->subscriptions->usable($this->subscriptions->ensure($tenant))) {
+                    if ($rule->property->archived_at || $rule->template->archived_at || ! $rule->is_active || ! $this->subscriptions->usable($this->subscriptions->ensure($tenant))) {
                         return 0;
                     }
                     $created = 0;

@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $source
  * @property string|null $external_uid
  * @property string $kind
+ * @property Carbon|null $archived_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Property $property
@@ -28,6 +29,11 @@ class Stay extends Model
 {
     /** @use HasFactory<StayFactory> */
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return ['archived_at' => 'datetime'];
+    }
 
     /** @return BelongsTo<Property, $this> */
     public function property(): BelongsTo

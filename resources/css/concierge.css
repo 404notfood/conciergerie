@@ -1,15 +1,15 @@
 @theme {
     --color-navy: #12263a;
-    --color-teal: #0f766e;
-    --color-mint: #e5f5f2;
+    --color-teal: #3155b9;
+    --color-mint: #edf1fc;
 }
 :root {
-    --primary: #0f766e;
+    --primary: #3155b9;
     --primary-foreground: #fff;
-    --ring: #0f766e;
+    --ring: #3155b9;
 }
 .brand-dot {
-    color: #0f766e;
+    color: #3155b9;
 }
 .brand-surface {
     color: #12263a;
@@ -21,7 +21,7 @@
     --border: #e4ebee;
     --card: #fff;
     --card-foreground: #12263a;
-    --primary: #0f766e;
+    --primary: #3155b9;
     --primary-foreground: #fff;
     --input: #dce5e9;
 }
@@ -71,25 +71,25 @@
         transform 0.2s;
 }
 .landing nav a:hover {
-    color: #0f766e;
+    color: #3155b9;
 }
 .brand-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 12px;
-    border: 1px solid #0f766e;
+    border: 1px solid #3155b9;
     border-radius: 6px;
-    background: linear-gradient(110deg, #0f8179, #08776f);
+    background: linear-gradient(110deg, #3b63cc, #3155b9);
     color: #fff;
     font-weight: 600;
     font-size: 14px;
     padding: 15px 23px;
-    box-shadow: 0 3px 5px #0f766e10;
+    box-shadow: 0 3px 5px #3155b910;
     text-decoration: none;
 }
 .brand-button:hover {
-    background: #09665f;
+    background: #254393;
     transform: translateY(-1px);
     color: #fff;
 }
@@ -99,12 +99,12 @@
 }
 .brand-button.secondary {
     background: #ffffff50;
-    color: #0f766e;
+    color: #3155b9;
     box-shadow: none;
-    border-color: #98c6c2;
+    border-color: #a9b9e6;
 }
 .brand-button.secondary:hover {
-    background: #e8f6f3;
+    background: #eef2fc;
 }
 .mobile-menu-button,
 .mobile-nav {
@@ -113,7 +113,7 @@
 .landing-hero {
     position: relative;
     padding: 67px 0 70px;
-    background: #f6f9f9;
+    background: #f7f8fc;
 }
 .hero-ambient {
     position: absolute;
@@ -123,8 +123,8 @@
     top: 0;
     background: radial-gradient(
         ellipse,
-        #d8f1eccc,
-        #e8f7f277 58%,
+        #dde6fbcc,
+        #eef2fc77 58%,
         transparent 72%
     );
     transform: rotate(-14deg);
@@ -141,8 +141,8 @@
     display: inline-flex;
     border-radius: 5px;
     padding: 6px 10px;
-    color: #08776f;
-    background: #def1ed;
+    color: #3155b9;
+    background: #e8edfb;
     font-size: 12px;
     font-weight: 600;
 }
@@ -183,7 +183,7 @@
     gap: 9px;
 }
 .hero-benefits svg {
-    color: #0f766e;
+    color: #3155b9;
     width: 24px;
     height: 24px;
 }
@@ -252,8 +252,8 @@
 }
 .preview-sidebar > div.active {
     border-radius: 4px;
-    color: #0f766e;
-    background: #e3f5f2;
+    color: #3155b9;
+    background: #e8edfb;
 }
 .preview-demo {
     margin-top: auto;
@@ -298,8 +298,8 @@
 .preview-stats > div > span {
     width: 31px;
     height: 31px;
-    background: #e8f7f4;
-    color: #0f766e;
+    background: #eef2fc;
+    color: #3155b9;
     border-radius: 50%;
     display: grid;
     place-items: center;
@@ -339,7 +339,7 @@
     padding: 11px 10px;
 }
 .preview-card h4 > span {
-    color: #0f766e;
+    color: #3155b9;
     font-size: 7px;
     font-weight: 500;
 }
@@ -418,7 +418,7 @@
     height: 18px;
 }
 .calendar-grid .selected {
-    background: #0f8179;
+    background: #3b63cc;
     color: white;
     border-radius: 50%;
 }
@@ -462,7 +462,7 @@
     align-items: center;
     justify-content: center;
     gap: 5px;
-    color: #0f766e;
+    color: #3155b9;
     font-size: 7px;
     margin-top: 7px;
 }
@@ -474,7 +474,7 @@
     bottom: -20px;
     left: 35px;
     padding: 12px 18px;
-    border: 1px solid #e4eeeb;
+    border: 1px solid #e4e8f3;
     border-radius: 9px;
     background: #fff;
     box-shadow: 0 8px 25px #14343e12;
@@ -484,8 +484,8 @@
     height: 33px;
     display: grid;
     place-items: center;
-    background: #e5f6ef;
-    color: #0f766e;
+    background: #edf1fc;
+    color: #3155b9;
     border-radius: 50%;
 }
 .preview-floating b {
@@ -507,7 +507,7 @@
 }
 .section-kicker {
     display: block;
-    color: #0f766e;
+    color: #3155b9;
     text-transform: uppercase;
     letter-spacing: 1.8px;
     font-size: 10px;
@@ -552,8 +552,8 @@
     place-items: center;
     border-radius: 50%;
     margin: auto;
-    background: #e9f7f4;
-    color: #0f766e;
+    background: #eef2fc;
+    color: #3155b9;
 }
 .step-icon > span {
     position: absolute;
@@ -561,7 +561,7 @@
     right: -6px;
     border: 3px solid white;
     background: #fff;
-    color: #72918b;
+    color: #7885a8;
     font-size: 9px;
     border-radius: 50%;
     width: 20px;
@@ -580,7 +580,7 @@
     margin: auto;
 }
 .terrain-section {
-    background: #edf8f5;
+    background: #f0f3fc;
     padding: 48px 0 0;
     overflow: hidden;
     scroll-margin-top: 20px;
@@ -602,7 +602,7 @@
     position: absolute;
     width: 410px;
     height: 410px;
-    border: 1px solid #d6ebe4;
+    border: 1px solid #dce3f4;
     border-radius: 50%;
     top: 45px;
 }
@@ -610,7 +610,7 @@
     content: '';
     position: absolute;
     inset: 35px;
-    border: 1px solid #d6ebe4;
+    border: 1px solid #dce3f4;
     border-radius: 50%;
 }
 .phone-frame {
@@ -622,8 +622,8 @@
     padding: 9px;
     border: 3px solid #a0b0b1;
     box-shadow:
-        0 0 0 2px #e7f0ed,
-        0 22px 60px #0f766e26;
+        0 0 0 2px #e9edf7,
+        0 22px 60px #3155b926;
     transform: rotate(-2deg);
 }
 .phone-notch {
@@ -660,7 +660,7 @@
     font-size: 12px;
 }
 .phone-title > svg {
-    color: #0f766e;
+    color: #3155b9;
 }
 .phone-title > span {
     margin-left: auto;
@@ -687,7 +687,7 @@
 }
 .phone-tabs button.active {
     color: #fff;
-    background: #0f8179;
+    background: #3b63cc;
 }
 .phone-mission {
     border-radius: 7px;
@@ -717,15 +717,15 @@
 .phone-check > span {
     width: 16px;
     height: 16px;
-    border: 1px solid #aacfc6;
+    border: 1px solid #b0bfe8;
     border-radius: 50%;
     display: grid;
     place-items: center;
 }
 .phone-check > span.checked {
     color: #fff;
-    background: #0f8179;
-    border-color: #0f8179;
+    background: #3b63cc;
+    border-color: #3b63cc;
 }
 .phone-photos {
     display: grid;
@@ -754,7 +754,7 @@
     justify-items: center;
     gap: 12px;
     padding: 32px 10px;
-    color: #0f766e;
+    color: #3155b9;
     font-size: 12px;
 }
 .phone-empty p {
@@ -762,7 +762,7 @@
     font-size: 10px;
 }
 .phone-caption {
-    color: #728c88;
+    color: #7b86a2;
     font-size: 8px;
     text-align: center;
     margin-top: 16px;
@@ -795,8 +795,8 @@
     gap: 19px;
 }
 .terrain-features > div > span {
-    background: #d8f1eb;
-    color: #0f766e;
+    background: #dde6fb;
+    color: #3155b9;
     border-radius: 50%;
     width: 53px;
     height: 53px;
@@ -819,7 +819,7 @@
     gap: 10px;
     align-items: center;
     font-size: 12px;
-    color: #0f766e;
+    color: #3155b9;
     font-weight: 600;
     margin-top: 25px;
 }
@@ -851,8 +851,8 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: #eaf7f4;
-    color: #0f766e;
+    background: #eef2fc;
+    color: #3155b9;
 }
 .activities-grid h3 {
     font-size: 13px;
@@ -884,7 +884,7 @@
 .landing-cta .landing-container > span {
     font-size: 10px;
     letter-spacing: 0.4px;
-    color: #b7d6d7;
+    color: #c3d0f3;
 }
 .landing-cta p {
     display: flex;
@@ -934,7 +934,7 @@
     top: -100px;
     background: #fff;
     padding: 12px;
-    border: 2px solid #0f766e;
+    border: 2px solid #3155b9;
     z-index: 50;
 }
 .skip-link:focus {
@@ -945,7 +945,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-    outline: 2px solid #0f766e;
+    outline: 2px solid #3155b9;
     outline-offset: 4px;
 }
 .workspace {
@@ -1015,12 +1015,12 @@ textarea:focus-visible {
     color: var(--ws-muted);
 }
 .workspace-nav a.active {
-    color: #0f766e;
-    background: #e4f4ef;
+    color: #3155b9;
+    background: #edf1fc;
     font-weight: 600;
 }
 .workspace-nav a:hover {
-    background: #0f766e10;
+    background: #3155b910;
 }
 .workspace-nav .nav-count {
     margin-left: auto;
@@ -1039,10 +1039,10 @@ textarea:focus-visible {
 }
 .terrain-nav-card {
     padding: 14px;
-    border: 1px solid #cfe9e1;
+    border: 1px solid #dce3f4;
     border-radius: 8px;
-    background: #edf8f3;
-    color: #0f766e;
+    background: #f0f3fc;
+    color: #3155b9;
     font-size: 11px;
 }
 .terrain-nav-card > div {
@@ -1055,7 +1055,7 @@ textarea:focus-visible {
     font-size: 10px;
     line-height: 1.7;
     margin: 7px 0 10px;
-    color: #627d76;
+    color: #687b9e;
 }
 .terrain-nav-card > a {
     font-weight: 600;
@@ -1093,8 +1093,8 @@ textarea:focus-visible {
     display: grid;
     place-items: center;
     border-radius: 50%;
-    background: #d8ebe8;
-    color: #0f766e;
+    background: #dde5f7;
+    color: #3155b9;
     font-size: 11px;
     font-weight: 700;
 }
@@ -1158,7 +1158,7 @@ textarea:focus-visible {
 .workspace-card-heading a,
 .workspace-card-heading button {
     font-size: 11px;
-    color: #0f766e;
+    color: #3155b9;
 }
 .stat-grid {
     display: grid;
@@ -1179,8 +1179,8 @@ textarea:focus-visible {
     place-items: center;
     width: 44px;
     height: 44px;
-    background: #e9f7f3;
-    color: #0f766e;
+    background: #eef2fc;
+    color: #3155b9;
 }
 .stat-card > div > small {
     display: block;
@@ -1227,7 +1227,7 @@ textarea:focus-visible {
     border-bottom: 0;
 }
 .mission-row:hover {
-    background: #0f766e04;
+    background: #3155b904;
 }
 .mission-time {
     font-size: 12px;
@@ -1267,7 +1267,7 @@ textarea:focus-visible {
 .empty-state > svg {
     width: 30px;
     height: 30px;
-    color: #89aea5;
+    color: #95a8d2;
     margin-bottom: 5px;
 }
 .empty-state b {
@@ -1320,20 +1320,20 @@ textarea:focus-visible {
     width: 3px;
     height: 3px;
     border-radius: 50%;
-    background: #0f766e;
+    background: #3155b9;
     position: absolute;
     left: calc(50% - 1.5px);
     bottom: 2px;
 }
 .calendar-day.active {
-    background: #0f766e;
+    background: #3155b9;
     color: white;
 }
 .calendar-day:hover {
-    background: #0f766e20;
+    background: #3155b920;
 }
 .calendar-day.active:hover {
-    background: #09665f;
+    background: #254393;
 }
 .activity-item {
     display: flex;
@@ -1346,8 +1346,8 @@ textarea:focus-visible {
     border-bottom: 0;
 }
 .activity-item > span {
-    background: #e6f5ef;
-    color: #0f766e;
+    background: #edf1fc;
+    color: #3155b9;
     padding: 6px;
     border-radius: 50%;
 }
@@ -1374,8 +1374,8 @@ textarea:focus-visible {
     place-items: center;
     width: 40px;
     height: 40px;
-    background: #e8f6f1;
-    color: #0f766e;
+    background: #eef2fc;
+    color: #3155b9;
     border-radius: 10px;
     margin-bottom: 15px;
 }
@@ -1505,7 +1505,7 @@ textarea:focus-visible {
     font-size: 12px;
 }
 .checklist-items input {
-    accent-color: #0f766e;
+    accent-color: #3155b9;
     width: 16px;
     height: 16px;
 }
@@ -1544,8 +1544,8 @@ textarea:focus-visible {
     font-size: 12px;
 }
 .message-contacts button.active {
-    background: #0f766e10;
-    color: #0f766e;
+    background: #3155b910;
+    color: #3155b9;
 }
 .message-thread {
     display: flex;
@@ -1570,8 +1570,8 @@ textarea:focus-visible {
 }
 .message-bubble.mine {
     align-self: flex-end;
-    background: #e4f5ef;
-    color: #173b32;
+    background: #edf1fc;
+    color: #26385e;
     border-radius: 12px 0 12px 12px;
 }
 .message-bubble b {
@@ -1586,7 +1586,7 @@ textarea:focus-visible {
 }
 .message-bubble small {
     font-size: 9px;
-    color: #778b86;
+    color: #7a849c;
 }
 .message-compose {
     display: flex;
@@ -1619,7 +1619,7 @@ textarea:focus-visible {
     min-height: 100vh;
     display: grid;
     place-items: center;
-    background: radial-gradient(ellipse at top, #e6f4ef, #f6f9fa 65%);
+    background: radial-gradient(ellipse at top, #edf1fc, #f6f9fa 65%);
     padding: 32px 20px;
 }
 .setup-card {
@@ -1627,9 +1627,9 @@ textarea:focus-visible {
     width: 100%;
     background: white;
     padding: 40px;
-    border: 1px solid #e3ece7;
+    border: 1px solid #e4e8f3;
     border-radius: 16px;
-    box-shadow: 0 15px 50px #18392a08;
+    box-shadow: 0 15px 50px #263b7008;
 }
 .setup-card h1 {
     font-size: 28px;
@@ -1646,10 +1646,10 @@ textarea:focus-visible {
 }
 .auth-brand-card {
     background: white;
-    border: 1px solid #e5ece9;
+    border: 1px solid #e6e9f3;
     padding: 32px;
     border-radius: 12px;
-    box-shadow: 0 14px 50px #12332a08;
+    box-shadow: 0 14px 50px #263b7008;
 }
 @media (min-width: 1500px) {
     .landing-hero {
@@ -2028,7 +2028,7 @@ textarea:focus-visible {
         left: 29px;
         top: 58px;
         right: auto;
-        background: #c8ded7;
+        background: #d1dcf3;
     }
     .workflow-step h3 {
         margin: 4px 0;
@@ -2249,11 +2249,11 @@ textarea:focus-visible {
     align-items: center;
     gap: 18px;
     background: #fff;
-    border-bottom: 1px solid #e2ebe7;
+    border-bottom: 1px solid #e4e8f3;
     padding: 20px 30px;
 }
 .terrain-app-header > a {
-    color: #0f766e;
+    color: #3155b9;
 }
 .terrain-connection {
     display: flex;
@@ -2294,10 +2294,10 @@ textarea:focus-visible {
 .terrain-notice {
     font-size: 12px;
     line-height: 1.8;
-    background: #e9f4ef;
-    color: #285e4c;
+    background: #edf1fc;
+    color: #3a5085;
     padding: 14px 17px;
-    border: 1px solid #d3e7dd;
+    border: 1px solid #dce3f4;
     border-radius: 8px;
     margin-bottom: 20px;
 }
@@ -2305,18 +2305,18 @@ textarea:focus-visible {
     background: white;
     max-width: 430px;
     margin: 35px auto;
-    border: 1px solid #e2ebe7;
+    border: 1px solid #e4e8f3;
     border-radius: 14px;
     padding: 32px;
-    box-shadow: 0 10px 40px #173e2806;
+    box-shadow: 0 10px 40px #263b7006;
 }
 .terrain-large-icon {
     width: 60px;
     height: 60px;
     display: grid;
     place-items: center;
-    background: #e7f5ee;
-    color: #0f766e;
+    background: #edf1fc;
+    color: #3155b9;
     border-radius: 15px;
     margin-bottom: 20px;
 }
@@ -2340,12 +2340,12 @@ textarea:focus-visible {
     gap: 18px;
     text-align: center;
     background: white;
-    border: 1px solid #e2ebe7;
+    border: 1px solid #e4e8f3;
     padding: 35px;
     border-radius: 12px;
 }
 .terrain-security > svg {
-    color: #0f766e;
+    color: #3155b9;
     width: 35px;
     height: 35px;
 }
@@ -2355,7 +2355,7 @@ textarea:focus-visible {
     line-height: 1.8;
 }
 .terrain-security > a {
-    color: #0f766e;
+    color: #3155b9;
     font-size: 12px;
 }
 .terrain-actions {
@@ -2378,13 +2378,13 @@ textarea:focus-visible {
 .terrain-mission-card {
     background: white;
     padding: 18px;
-    border: 1px solid #e1e9e6;
+    border: 1px solid #e3e7f1;
     border-radius: 9px;
     text-align: left;
 }
 .terrain-mission-card.active {
-    border-color: #0f766e;
-    box-shadow: 0 0 0 1px #0f766e;
+    border-color: #3155b9;
+    box-shadow: 0 0 0 1px #3155b9;
 }
 .terrain-mission-card > span {
     font-size: 10px;
@@ -2401,14 +2401,14 @@ textarea:focus-visible {
 }
 .terrain-mission-card > small {
     display: block;
-    color: #0f766e;
+    color: #3155b9;
     font-size: 10px;
     margin-top: 14px;
 }
 .terrain-work-card {
     background: white;
     padding: 26px;
-    border: 1px solid #e1e9e6;
+    border: 1px solid #e3e7f1;
     border-radius: 10px;
 }
 .terrain-work-card h2 {
@@ -2422,7 +2422,7 @@ textarea:focus-visible {
     color: #627185;
 }
 .terrain-work-card .detail-block {
-    background: #f5f8f6;
+    background: #f6f7fb;
 }
 .terrain-work-card fieldset:disabled {
     opacity: 0.85;
@@ -2437,9 +2437,9 @@ textarea:focus-visible {
     align-items: center;
     gap: 7px;
     padding: 11px;
-    border: 1px dashed #92bfb0;
-    color: #0f766e;
-    background: #edf7f2;
+    border: 1px dashed #a5b5df;
+    color: #3155b9;
+    background: #f0f3fc;
     font-size: 11px;
     border-radius: 6px;
     cursor: pointer;
@@ -2503,13 +2503,13 @@ textarea:focus-visible {
     color: #fff;
 }
 .admin-sidebar .brand-dot {
-    color: #57c3b1;
+    color: #93b1ff;
 }
 .admin-role {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #99c6c7;
+    color: #b3c6f2;
     font-size: 10px;
     padding: 10px 9px 26px;
 }
@@ -2517,11 +2517,11 @@ textarea:focus-visible {
     color: #afc0cd;
 }
 .admin-sidebar .workspace-nav a.active {
-    background: #214d57;
-    color: #d1f2e7;
+    background: #2b4075;
+    color: #dce5fc;
 }
 .admin-sidebar .workspace-nav a:hover {
-    background: #214653;
+    background: #273c68;
 }
 .admin-sidebar-note {
     padding: 15px;
@@ -2551,8 +2551,8 @@ textarea:focus-visible {
     width: 36px;
     height: 36px;
     border-radius: 8px;
-    color: #0f766e;
-    background: #e8f6f1;
+    color: #3155b9;
+    background: #eef2fc;
     display: grid;
     place-items: center;
 }
@@ -2623,7 +2623,7 @@ textarea:focus-visible {
 .admin-table th {
     padding: 16px 20px;
     color: var(--ws-muted);
-    background: #0f766e03;
+    background: #3155b903;
     font-size: 10px;
     font-weight: 600;
     border-bottom: 1px solid var(--ws-border);
@@ -2667,7 +2667,7 @@ textarea:focus-visible {
 }
 .admin-text-button {
     display: block;
-    color: #0f766e;
+    color: #3155b9;
     font-size: 10px;
     font-weight: 600;
     margin: 9px 0;
@@ -2679,10 +2679,10 @@ textarea:focus-visible {
     align-items: flex-start;
     padding: 17px;
     margin-bottom: 23px;
-    border: 1px solid #d4e8e0;
+    border: 1px solid #dce3f4;
     border-radius: 8px;
-    background: #edf6f1;
-    color: #315b4c;
+    background: #f0f3fc;
+    color: #3a5085;
 }
 .admin-info > svg {
     flex-shrink: 0;
@@ -2751,7 +2751,7 @@ textarea:focus-visible {
     display: flex;
     align-items: center;
     gap: 7px;
-    color: #357562;
+    color: #46639c;
     font-size: 10px;
 }
 .admin-empty {
@@ -2777,7 +2777,7 @@ textarea:focus-visible {
     line-height: 1.6;
 }
 .admin-checkbox input {
-    accent-color: #0f766e;
+    accent-color: #3155b9;
     width: 15px;
     height: 15px;
     flex-shrink: 0;
@@ -2797,7 +2797,7 @@ textarea:focus-visible {
     text-align: left;
 }
 .admin-event > svg {
-    color: #0f766e;
+    color: #3155b9;
 }
 .admin-event > span {
     flex: 1;
@@ -2825,9 +2825,9 @@ textarea:focus-visible {
     overflow-wrap: anywhere;
 }
 .admin-current-contract {
-    background: #edf7f1;
+    background: #f0f3fc;
     padding: 15px;
-    border: 1px solid #d6e9df;
+    border: 1px solid #dce3f4;
     border-radius: 7px;
     font-size: 11px;
 }
@@ -2873,8 +2873,8 @@ textarea:focus-visible {
 .subscription-icon {
     display: grid;
     place-items: center;
-    background: #e7f5ee;
-    color: #0f766e;
+    background: #edf1fc;
+    color: #3155b9;
     border-radius: 9px;
     width: 44px;
     height: 44px;
@@ -2886,7 +2886,7 @@ textarea:focus-visible {
 }
 .subscription-plan p {
     font-size: 12px;
-    color: #0f766e;
+    color: #3155b9;
     margin-top: 8px;
 }
 .subscription-plan small {
@@ -2929,14 +2929,14 @@ textarea:focus-visible {
 .quota-track {
     height: 5px;
     border-radius: 5px;
-    background: #e5eeea;
+    background: #e6eaf5;
     overflow: hidden;
     margin-top: 18px;
 }
 .quota-track > span {
     display: block;
     height: 100%;
-    background: #0f766e;
+    background: #3155b9;
     border-radius: 5px;
 }
 .quota-track > span.full {
@@ -2962,12 +2962,12 @@ textarea:focus-visible {
     font-size: 12px;
 }
 .subscription-features > div > svg {
-    color: #0f766e;
+    color: #3155b9;
 }
 .subscription-features > div > span {
     margin-left: auto;
     font-size: 10px;
-    color: #0f766e;
+    color: #3155b9;
 }
 .subscription-features > div.unavailable {
     color: #8996a4;
@@ -3043,7 +3043,7 @@ textarea:focus-visible {
     margin-bottom: 32px;
 }
 .marketing-hero nav a {
-    color: var(--brand-teal, #0f766e);
+    color: var(--brand-teal, #3155b9);
 }
 .marketing-hero h1 {
     font-size: clamp(32px, 4.6vw, 58px);
@@ -3096,7 +3096,7 @@ textarea:focus-visible {
     padding-top: 20px;
 }
 .marketing-faq details {
-    border-bottom: 1px solid #dce5e4;
+    border-bottom: 1px solid #e0e5f1;
     padding: 18px 0;
 }
 .marketing-faq summary {
@@ -3125,7 +3125,7 @@ textarea:focus-visible {
 }
 .marketing-link-card {
     padding: 26px;
-    border: 1px solid #dce5e4;
+    border: 1px solid #e0e5f1;
     background: #fff;
     border-radius: 14px;
     display: flex;
@@ -3166,7 +3166,7 @@ textarea:focus-visible {
     overflow-wrap: anywhere;
 }
 .seo-summary svg {
-    color: #0f766e;
+    color: #3155b9;
 }
 .seo-summary small {
     font-size: 12px;
@@ -3198,7 +3198,7 @@ textarea:focus-visible {
     color: #64748b;
 }
 .seo-tabs button.active {
-    background: #0f766e;
+    background: #3155b9;
     color: white;
 }
 .seo-pages {
@@ -3209,7 +3209,7 @@ textarea:focus-visible {
     justify-content: space-between;
     gap: 30px;
     padding: 24px 0;
-    border-top: 1px solid #e5ecec;
+    border-top: 1px solid #e6eaf3;
 }
 .workspace-card-heading .brand-button:not(.secondary) {
     color: white;
@@ -3225,7 +3225,7 @@ textarea:focus-visible {
 }
 .seo-pages code {
     font-size: 11px;
-    color: #0f766e;
+    color: #3155b9;
     overflow-wrap: anywhere;
 }
 .seo-pages p {
@@ -3287,7 +3287,7 @@ textarea:focus-visible {
 }
 .seo-checklist li > svg {
     flex-shrink: 0;
-    border: 1px solid #cad4d3;
+    border: 1px solid #ccd4e5;
     border-radius: 50%;
     color: transparent;
     width: 25px;
@@ -3295,8 +3295,8 @@ textarea:focus-visible {
     padding: 4px;
 }
 .seo-checklist li[data-done='true'] > svg {
-    background: #0f766e;
-    border-color: #0f766e;
+    background: #3155b9;
+    border-color: #3155b9;
     color: white;
 }
 .seo-checklist b {
@@ -3319,10 +3319,10 @@ textarea:focus-visible {
     justify-content: space-between;
     gap: 10px;
     padding: 12px 14px;
-    background: #f3f8f7;
+    background: #f4f6fc;
     border-radius: 8px;
     font-size: 12px;
-    color: #0f766e;
+    color: #3155b9;
 }
 .seo-editor-dialog {
     width: calc(100% - 24px);
@@ -3361,7 +3361,7 @@ textarea:focus-visible {
     line-height: 1.6;
 }
 .seo-content-block {
-    border: 1px solid #dce5e4;
+    border: 1px solid #e0e5f1;
     padding: 18px;
     border-radius: 10px;
     display: grid;
@@ -3477,7 +3477,7 @@ textarea:focus-visible {
     position: absolute;
     right: -12px;
     top: -10px;
-    background: #0f766e;
+    background: #3155b9;
     border: 2px solid white;
     border-radius: 20px;
     color: white;
@@ -3495,7 +3495,7 @@ textarea:focus-visible {
     border-bottom: 1px solid var(--ws-border);
 }
 .notification-list > article.unread {
-    background: #0f766e08;
+    background: #3155b908;
 }
 .notification-marker {
     height: 7px;
@@ -3505,7 +3505,7 @@ textarea:focus-visible {
     background: #cbd5e1;
 }
 .unread > .notification-marker {
-    background: #0f766e;
+    background: #3155b9;
 }
 .notification-list article > div {
     flex: 1;
@@ -3541,7 +3541,7 @@ textarea:focus-visible {
 }
 .notification-preferences input {
     justify-self: center;
-    accent-color: #0f766e;
+    accent-color: #3155b9;
 }
 .operation-list > article {
     padding: 20px 24px;

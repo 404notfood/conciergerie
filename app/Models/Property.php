@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $instructions
  * @property string|null $access_code
  * @property bool $offline_access
+ * @property Carbon|null $archived_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Client $client
@@ -33,7 +34,7 @@ class Property extends Model
 
     protected function casts(): array
     {
-        return ['access_code' => 'encrypted', 'offline_access' => 'boolean'];
+        return ['archived_at' => 'datetime', 'access_code' => 'encrypted', 'offline_access' => 'boolean'];
     }
 
     /** @return BelongsTo<Client, $this> */

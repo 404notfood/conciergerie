@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int $concierge_id
  * @property string $name
  * @property list<string> $checklist
+ * @property Carbon|null $archived_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
@@ -24,6 +25,6 @@ class ServiceTemplate extends Model
 
     protected function casts(): array
     {
-        return ['checklist' => 'array'];
+        return ['archived_at' => 'datetime', 'checklist' => 'array'];
     }
 }
