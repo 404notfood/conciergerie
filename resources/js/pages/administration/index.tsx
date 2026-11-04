@@ -44,7 +44,6 @@ import type {
     AdminUser,
     CatalogItem,
     ConciergeSummary,
-    Limits,
 } from '@/types/subscription';
 import { euros } from '@/types/subscription';
 const sections = [
@@ -119,7 +118,13 @@ export default function Administration(props: AdminProps) {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('');
     const [modal, setModal] = useState<
-        'concierge' | 'plan' | 'addon' | 'subscription' | 'user' | 'event' | null
+        | 'concierge'
+        | 'plan'
+        | 'addon'
+        | 'subscription'
+        | 'user'
+        | 'event'
+        | null
     >(null);
     const [item, setItem] = useState<CatalogItem | null>(null);
     const [company, setCompany] = useState<ConciergeSummary | null>(null);
@@ -905,18 +910,18 @@ export default function Administration(props: AdminProps) {
                             {modal === 'concierge'
                                 ? 'Créer une conciergerie'
                                 : modal === 'plan'
-                                ? item
-                                    ? 'Modifier l’offre'
-                                    : 'Créer une offre'
-                                : modal === 'addon'
                                   ? item
-                                      ? 'Modifier l’option'
-                                      : 'Créer une option'
-                                  : modal === 'subscription'
-                                    ? 'Gérer l’abonnement'
-                                    : modal === 'user'
-                                      ? 'Accès utilisateur'
-                                      : 'Détails du changement'}
+                                      ? 'Modifier l’offre'
+                                      : 'Créer une offre'
+                                  : modal === 'addon'
+                                    ? item
+                                        ? 'Modifier l’option'
+                                        : 'Créer une option'
+                                    : modal === 'subscription'
+                                      ? 'Gérer l’abonnement'
+                                      : modal === 'user'
+                                        ? 'Accès utilisateur'
+                                        : 'Détails du changement'}
                         </DialogTitle>
                         <DialogDescription>
                             {modal === 'subscription'
@@ -1020,11 +1025,25 @@ function ConciergeForm({
         >
             <Field label="Nom de la conciergerie" name="name" required />
             <div className="form-grid">
-                <Field label="Nom du responsable" name="manager_name" required />
-                <Field label="E-mail de connexion" name="email" type="email" required />
+                <Field
+                    label="Nom du responsable"
+                    name="manager_name"
+                    required
+                />
+                <Field
+                    label="E-mail de connexion"
+                    name="email"
+                    type="email"
+                    required
+                />
             </div>
             <div className="form-grid">
-                <Field label="Mot de passe" name="password" type="password" required />
+                <Field
+                    label="Mot de passe"
+                    name="password"
+                    type="password"
+                    required
+                />
                 <Field
                     label="Confirmer le mot de passe"
                     name="password_confirmation"
@@ -1043,13 +1062,19 @@ function ConciergeForm({
                 required
                 empty="Choisir une offre active"
                 defaultValue={
-                    activePlans.some((plan) => plan.id === settings.default_plan_id)
+                    activePlans.some(
+                        (plan) => plan.id === settings.default_plan_id,
+                    )
                         ? settings.default_plan_id
-                        : activePlans[0]?.id ?? ''
+                        : (activePlans[0]?.id ?? '')
                 }
                 items={activePlans.map((plan) => ({
                     value: plan.id,
-                    label: plan.name + ' · ' + euros(plan.monthly_price_cents) + ' / mois',
+                    label:
+                        plan.name +
+                        ' · ' +
+                        euros(plan.monthly_price_cents) +
+                        ' / mois',
                 }))}
             />
             {!activePlans.length ? (
@@ -1065,8 +1090,8 @@ function ConciergeForm({
             <p className="form-hint">
                 La démonstration conserve les limites et fonctionnalités de
                 l’offre choisie, avec un tarif personnalisé de 0 € et un accès
-                actif sans échéance. Sinon, l’essai dure {settings.trial_days} jours.
-                Vous pourrez ensuite modifier l’abonnement.
+                actif sans échéance. Sinon, l’essai dure {settings.trial_days}{' '}
+                jours. Vous pourrez ensuite modifier l’abonnement.
             </p>
         </BusinessForm>
     );
