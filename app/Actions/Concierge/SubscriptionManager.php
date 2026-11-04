@@ -18,7 +18,7 @@ class SubscriptionManager
 {
     public const LIMITS = ['staff' => 'Personnel (responsables et intervenants)', 'clients' => 'Clients', 'properties' => 'Lieux d’intervention', 'teams' => 'Agences / équipes', 'missions_month' => 'Missions créées par mois', 'storage_mb' => 'Stockage photo (Mo)'];
 
-    public const FEATURES = ['offline' => 'Travail terrain hors connexion', 'calendar_import' => 'Import de calendriers iCal', 'client_portal' => 'Espace client', 'messaging' => 'Messagerie client', 'custom_templates' => 'Prestations personnalisées', 'subcontracting' => 'Sous-traitance'];
+    public const FEATURES = ['offline' => 'Travail terrain hors connexion', 'calendar_import' => 'Import et synchronisation iCal', 'client_portal' => 'Espace client', 'messaging' => 'Messagerie client', 'custom_templates' => 'Prestations personnalisées', 'subcontracting' => 'Sous-traitance'];
 
     public function settings(): ApplicationSetting
     {

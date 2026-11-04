@@ -6,6 +6,7 @@ use App\Actions\Concierge\NotifyActivity;
 use App\Actions\Concierge\SubscriptionManager;
 use App\Actions\Concierge\WorkspaceAccess;
 use App\Models\Activity;
+use App\Models\CalendarFeed;
 use App\Models\Client;
 use App\Models\Concierge;
 use App\Models\Incident;
@@ -129,6 +130,7 @@ class WorkspaceController extends Controller
             'members' => $member->role === 'manager' ? Membership::where('concierge_id', $tenant)->with('user:id,name,email')->get() : ($member->role === 'coordinator' ? Membership::where('concierge_id', $tenant)->where('company', $member->company)->where('role', 'worker')->with('user:id,name,email')->get() : []),
             'templates' => $member->role === 'manager' ? ServiceTemplate::where('concierge_id', $tenant)->orderBy('id')->get() : [],
             'stays' => $member->role === 'manager' ? Stay::where('concierge_id', $tenant)->with('property')->orderBy('starts_on')->get() : [],
+            'calendarFeeds' => $member->role === 'manager' ? CalendarFeed::where('concierge_id', $tenant)->with('property:id,name,archived_at')->orderBy('name')->orderBy('id')->get() : [],
             'incidents' => $incidentData, 'requests' => in_array($member->role, ['manager', 'client'], true) ? $requests->latest('id')->get() : [],
             'messages' => in_array($member->role, ['manager', 'client'], true) && ($this->subscriptions->features($this->subscriptions->ensure($tenant))['messaging'] ?? false) ? $messages->orderBy('id')->get() : [],
             'activities' => $member->role === 'manager' ? Activity::where('concierge_id', $tenant)->with('user:id,name')->latest('id')->limit(30)->get() : [],

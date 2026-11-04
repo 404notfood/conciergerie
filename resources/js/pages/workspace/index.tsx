@@ -8,6 +8,7 @@ import {
     ReportPdfLink,
 } from '@/components/concierge/operations';
 import { ActionCenter } from '@/components/concierge/action-center';
+import { CalendarFeeds } from '@/components/concierge/calendar-feeds';
 import {
     ArchiveFilter,
     DirectoryActions,
@@ -1076,6 +1077,10 @@ export default function Workspace(props: WorkspaceProps) {
                     {view === 'planning' && isManager ? (
                         <div className="dashboard-grid">
                             <div className="dashboard-primary">
+                                <CalendarFeeds
+                                    feeds={props.calendarFeeds}
+                                    properties={props.properties}
+                                />
                                 <section className="workspace-card">
                                     <div className="workspace-card-heading">
                                         <h2>
@@ -1120,6 +1125,14 @@ export default function Workspace(props: WorkspaceProps) {
                                                 </span>
                                                 <div>
                                                     <b>{s.title}</b>
+                                                    {s.calendar_feed_id ? (
+                                                        <p>
+                                                            Synchronisé par iCal
+                                                            : le titre et les
+                                                            dates suivent le
+                                                            calendrier source.
+                                                        </p>
+                                                    ) : null}
                                                     <DirectoryActions
                                                         resource="stays"
                                                         record={s}

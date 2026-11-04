@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Concierge\SubscriptionManager;
 use App\Actions\Seo\SeoManager;
 use App\Models\Concierge;
+use App\Models\ConciergeSubscription;
 use App\Models\Membership;
 use App\Models\PlanAddon;
 use App\Models\SubscriptionPlan;
@@ -32,6 +33,39 @@ class AdministrationController extends Controller
         });
 
         return Inertia::render('administration/index', ['plans' => SubscriptionPlan::orderBy('monthly_price_cents')->get(), 'addons' => PlanAddon::orderBy('name')->get(), 'concierges' => $concierges, 'users' => User::select('id', 'name', 'email', 'is_admin', 'disabled_at', 'created_at')->orderByDesc('id')->get(), 'settings' => $settings, 'limitLabels' => SubscriptionManager::LIMITS, 'featureLabels' => SubscriptionManager::FEATURES, 'seoManagement' => app(SeoManager::class)->administration(), 'events' => DB::table('administration_events')->join('users', 'users.id', '=', 'administration_events.user_id')->select('administration_events.*', 'users.name as actor')->orderByDesc('administration_events.id')->limit(100)->get()]);
+    }
+
+    public function storeConcierge(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'manager_name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:12', 'confirmed'],
+            'plan_id' => ['required', 'integer', Rule::exists('subscription_plans', 'id')->where('is_active', true)],
+            'is_demo' => ['required', 'boolean'],
+        ]);
+
+        DB::transaction(function () use ($request, $data) {
+            $plan = SubscriptionPlan::whereKey($data['plan_id'])->where('is_active', true)->firstOrFail();
+            $concierge = Concierge::create(['name' => $data['name']]);
+            $manager = User::create(['name' => $data['manager_name'], 'email' => $data['email'], 'password' => $data['password']]);
+            $manager->forceFill(['email_verified_at' => now()])->save();
+            Membership::create(['concierge_id' => $concierge->id, 'user_id' => $manager->id, 'role' => 'manager']);
+            ConciergeSubscription::create([
+                'concierge_id' => $concierge->id,
+                'subscription_plan_id' => $plan->id,
+                'status' => $data['is_demo'] ? 'active' : 'trialing',
+                'terms' => $this->subscriptions->terms($plan, []),
+                'starts_on' => now()->toDateString(),
+                'expires_at' => $data['is_demo'] ? null : now()->addDays($this->subscriptions->settings()->trial_days),
+                'price_override_cents' => $data['is_demo'] ? 0 : null,
+                'notes' => $data['is_demo'] ? 'Compte de démonstration créé manuellement.' : null,
+            ]);
+            $this->log($request, 'Conciergerie créée : '.$concierge->name, ['manager_id' => $manager->id, 'plan_id' => $plan->id, 'is_demo' => (bool) $data['is_demo']], $concierge->id);
+        });
+
+        return to_route('admin.index', ['view' => 'concierges'])->with('success', 'Conciergerie créée. Le responsable peut se connecter avec les identifiants renseignés.');
     }
 
     /** @return array<string,mixed> */

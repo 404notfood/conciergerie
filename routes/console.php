@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 Schedule::command('app:prepare-missions')->everyFifteenMinutes()->withoutOverlapping(15);
 
 Schedule::command('app:remind-missions')->everyFifteenMinutes()->withoutOverlapping(15);
+
+Schedule::command('app:sync-calendars')->everyMinute()->withoutOverlapping(5);

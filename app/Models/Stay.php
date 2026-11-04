@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $concierge_id
  * @property int $property_id
+ * @property int|null $calendar_feed_id
  * @property string $title
  * @property string $starts_on
  * @property string $ends_on
@@ -24,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property Property $property
  */
-#[Fillable(['concierge_id', 'property_id', 'title', 'starts_on', 'ends_on', 'source', 'external_uid', 'kind'])]
+#[Fillable(['concierge_id', 'property_id', 'calendar_feed_id', 'title', 'starts_on', 'ends_on', 'source', 'external_uid', 'kind'])]
 class Stay extends Model
 {
     /** @use HasFactory<StayFactory> */

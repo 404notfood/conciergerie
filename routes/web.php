@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdministrationController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ClientReportController;
 use App\Http\Controllers\DirectoryController;
@@ -53,6 +54,9 @@ Route::middleware(['auth', 'verified', EnsureSubscription::class])->group(functi
     Route::post('/templates', [DirectoryController::class, 'template'])->name('templates.store');
     Route::post('/stays', [DirectoryController::class, 'stay'])->name('stays.store');
     Route::post('/stays/import', [DirectoryController::class, 'import'])->name('stays.import');
+    Route::post('/calendar-feeds', [CalendarFeedController::class, 'store'])->middleware('throttle:10,1')->name('calendar-feeds.store');
+    Route::post('/calendar-feeds/{calendarFeed}/update', [CalendarFeedController::class, 'update'])->middleware('throttle:10,1')->name('calendar-feeds.update');
+    Route::post('/calendar-feeds/{calendarFeed}/sync', [CalendarFeedController::class, 'sync'])->middleware('throttle:10,1')->name('calendar-feeds.sync');
     Route::post('/missions', [MissionController::class, 'store'])->name('missions.store');
     Route::post('/missions/{mission}/designate', [MissionController::class, 'designate'])->name('missions.designate');
     Route::post('/missions/{mission}/transition', [MissionController::class, 'transition'])->name('missions.transition');
@@ -77,6 +81,7 @@ Route::middleware(['auth', 'verified', EnsureAppAdmin::class])->prefix('admin')-
     Route::post('/plans/{plan}', [AdministrationController::class, 'updatePlan'])->name('plans.update');
     Route::post('/addons', [AdministrationController::class, 'storeAddon'])->name('addons.store');
     Route::post('/addons/{addon}', [AdministrationController::class, 'updateAddon'])->name('addons.update');
+    Route::post('/concierges', [AdministrationController::class, 'storeConcierge'])->name('concierges.store');
     Route::post('/concierges/{concierge}/subscription', [AdministrationController::class, 'subscription'])->name('subscriptions.update');
     Route::post('/concierges/{concierge}/visit', [AdministrationController::class, 'visit'])->name('concierges.visit');
     Route::post('/leave', [AdministrationController::class, 'leave'])->name('leave');

@@ -104,6 +104,7 @@ export type TemplateRecord = {
     archived_at: string | null;
 };
 export type StayRecord = {
+    calendar_feed_id: number | null;
     archived_at: string | null;
     id: number;
     title: string;
@@ -128,6 +129,7 @@ export type ActivityRecord = {
     created_at: string;
 };
 export type WorkspaceProps = {
+    calendarFeeds: CalendarFeedRecord[];
     actionCenter: Record<
         | 'urgent_incidents'
         | 'late_missions'
@@ -153,4 +155,16 @@ export type WorkspaceProps = {
     requests: RequestRecord[];
     messages: MessageRecord[];
     activities: ActivityRecord[];
+};
+
+export type CalendarFeedRecord = {
+    id: number;
+    name: string;
+    source: string;
+    is_active: boolean;
+    last_attempt_at: string | null;
+    last_synced_at: string | null;
+    last_error: string | null;
+    event_count: number;
+    property: { id: number; name: string; archived_at: string | null };
 };

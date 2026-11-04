@@ -119,7 +119,7 @@ export default function Administration(props: AdminProps) {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('');
     const [modal, setModal] = useState<
-        'plan' | 'addon' | 'subscription' | 'user' | 'event' | null
+        'concierge' | 'plan' | 'addon' | 'subscription' | 'user' | 'event' | null
     >(null);
     const [item, setItem] = useState<CatalogItem | null>(null);
     const [company, setCompany] = useState<ConciergeSummary | null>(null);
@@ -229,6 +229,15 @@ export default function Administration(props: AdminProps) {
                                                 : 'Chaque changement d’offre ou d’accès reste traçable.'}
                             </p>
                         </div>
+                        {section === 'concierges' ? (
+                            <button
+                                className="brand-button small"
+                                onClick={() => setModal('concierge')}
+                            >
+                                <Plus size={15} />
+                                Nouvelle conciergerie
+                            </button>
+                        ) : null}
                         {section === 'plans' || section === 'addons' ? (
                             <button
                                 className="brand-button small"
@@ -893,7 +902,9 @@ export default function Administration(props: AdminProps) {
                 <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>
-                            {modal === 'plan'
+                            {modal === 'concierge'
+                                ? 'Créer une conciergerie'
+                                : modal === 'plan'
                                 ? item
                                     ? 'Modifier l’offre'
                                     : 'Créer une offre'
@@ -913,6 +924,13 @@ export default function Administration(props: AdminProps) {
                                 : 'Administration de ' + name}
                         </DialogDescription>
                     </DialogHeader>
+                    {modal === 'concierge' ? (
+                        <ConciergeForm
+                            plans={props.plans}
+                            settings={props.settings}
+                            close={close}
+                        />
+                    ) : null}
                     {modal === 'plan' || modal === 'addon' ? (
                         <CatalogForm
                             item={item}
@@ -981,6 +999,76 @@ export default function Administration(props: AdminProps) {
                 </DialogContent>
             </Dialog>
         </div>
+    );
+}
+function ConciergeForm({
+    plans,
+    settings,
+    close,
+}: {
+    plans: CatalogItem[];
+    settings: AdminProps['settings'];
+    close: () => void;
+}) {
+    const activePlans = plans.filter((plan) => plan.is_active);
+    return (
+        <BusinessForm
+            action={conciergeRoutes.store.url()}
+            onSuccess={close}
+            submit="Créer la conciergerie et son compte"
+            transform={(data) => ({ ...data, is_demo: 'is_demo' in data })}
+        >
+            <Field label="Nom de la conciergerie" name="name" required />
+            <div className="form-grid">
+                <Field label="Nom du responsable" name="manager_name" required />
+                <Field label="E-mail de connexion" name="email" type="email" required />
+            </div>
+            <div className="form-grid">
+                <Field label="Mot de passe" name="password" type="password" required />
+                <Field
+                    label="Confirmer le mot de passe"
+                    name="password_confirmation"
+                    type="password"
+                    required
+                />
+            </div>
+            <p className="form-hint">
+                Au moins 12 caractères. Le compte responsable sera utilisable
+                immédiatement. Conservez ces identifiants pour vous connecter ou
+                les communiquer au responsable.
+            </p>
+            <SelectField
+                label="Offre attribuée"
+                name="plan_id"
+                required
+                empty="Choisir une offre active"
+                defaultValue={
+                    activePlans.some((plan) => plan.id === settings.default_plan_id)
+                        ? settings.default_plan_id
+                        : activePlans[0]?.id ?? ''
+                }
+                items={activePlans.map((plan) => ({
+                    value: plan.id,
+                    label: plan.name + ' · ' + euros(plan.monthly_price_cents) + ' / mois',
+                }))}
+            />
+            {!activePlans.length ? (
+                <p className="form-hint">
+                    Créez ou activez une offre dans « Offres et tarifs » avant
+                    d’ajouter une conciergerie.
+                </p>
+            ) : null}
+            <label className="admin-checkbox">
+                <input type="checkbox" name="is_demo" value="1" />
+                Compte de démonstration — gratuit, sans expiration
+            </label>
+            <p className="form-hint">
+                La démonstration conserve les limites et fonctionnalités de
+                l’offre choisie, avec un tarif personnalisé de 0 € et un accès
+                actif sans échéance. Sinon, l’essai dure {settings.trial_days} jours.
+                Vous pourrez ensuite modifier l’abonnement.
+            </p>
+        </BusinessForm>
     );
 }
 function CatalogForm({
